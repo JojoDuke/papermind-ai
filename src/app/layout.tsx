@@ -1,8 +1,9 @@
 import Navbar from "@/components/landing/navbar";
+import Footer from "@/components/landing/footer";
 import Providers from "@/components/providers/providers";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
 import { Toaster } from "@/components/ui/toaster";
@@ -10,11 +11,14 @@ import { Toaster } from "@/components/ui/toaster";
 import "react-loading-skeleton/dist/skeleton.css";
 import "simplebar-react/dist/simplebar.min.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const jakarta = Plus_Jakarta_Sans({ 
+  subsets: ["latin"],
+  variable: "--font-jakarta",
+});
 
 export const metadata: Metadata = {
-  title: "ChatifyPDF - AI Powered PDF Interaction",
-  description: "Interact with your pdfs with the power of AI & GPT",
+  title: "Papermind AI - Your Intelligent Document Assistant",
+  description: "Transform your PDFs into interactive knowledge with AI-powered conversations and insights",
 };
 
 export default function RootLayout({
@@ -27,13 +31,14 @@ export default function RootLayout({
       <Providers>
         <body
           className={cn(
-            "min-h-screen font-sans antialiased grainy",
-            inter.className
+            "min-h-screen font-sans antialiased grainy flex flex-col",
+            jakarta.variable
           )}
         >
           <Toaster />
           <Navbar />
-          {children}
+          <main className="flex-1">{children}</main>
+          <Footer />
         </body>
       </Providers>
     </html>
