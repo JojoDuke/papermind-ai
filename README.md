@@ -25,8 +25,8 @@ Papermind AI is your intelligent document companion - an AI-powered PDF and docu
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/JojoDuke/papermind-ai.git
-cd papermind-ai
+git clone https://github.com/JojoDuke/ChatifyPDF-Fix.git
+cd ChatifyPDF-Fix
 ```
 
 2. Install dependencies:
@@ -39,9 +39,27 @@ yarn install
 3. Set up environment variables:
 Create a `.env.local` file with the following variables:
 ```env
+# Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_key
+
+# OpenAI Configuration
 OPENAI_API_KEY=your_openai_key
+OPENAI_MODEL=gpt-4-turbo-preview
+
+# Vector Database Configuration (Choose one)
+# For Pinecone:
+PINECONE_API_KEY=your_pinecone_key
+PINECONE_ENVIRONMENT=your_pinecone_env
+PINECONE_INDEX=your_index_name
+
+# For Weaviate:
+WEAVIATE_API_KEY=your_weaviate_key
+WEAVIATE_URL=your_weaviate_cluster_url
+
+# Optional: Analytics & Monitoring
+NEXT_PUBLIC_POSTHOG_KEY=your_posthog_key
+NEXT_PUBLIC_POSTHOG_HOST=your_posthog_host
 ```
 
 4. Run the development server:
@@ -62,17 +80,17 @@ Papermind AI operates on a freemium model:
 
 ## 🤝 Contributing
 
-We welcome contributions! Please feel free to submit a Pull Request.
+We welcome contributions! Please feel free to submit a Pull Request. Here's how you can contribute:
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🔗 Links
-
-- [Website](https://papermind.ai)
-- [Documentation](https://docs.papermind.ai)
-- [Twitter](https://twitter.com/papermindai)
 
 ---
 
