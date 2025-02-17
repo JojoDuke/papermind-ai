@@ -10,7 +10,7 @@ export function AuthButtons({ mobile = false }: AuthButtonsProps) {
   return (
     <>
       <Link
-        href="/api/auth/login"
+        href="/signin"
         className={buttonVariants({
           variant: "ghost",
           size: "sm",
@@ -23,7 +23,7 @@ export function AuthButtons({ mobile = false }: AuthButtonsProps) {
         Sign In
       </Link>
       <Link
-        href="/api/auth/register"
+        href="/signup"
         className={cn(
           buttonVariants({
             size: "sm",

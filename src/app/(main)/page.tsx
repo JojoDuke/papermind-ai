@@ -6,10 +6,10 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <>
+    <div className="relative flex flex-col">
       <MaxWidthWrapper className="mb-12 mt-28 sm:mt-40 flex flex-col items-center justify-center text-center">
         <h1 className="max-w-4xl text-5xl font-bold md:text-6xl lg:text-7xl">
-          Transform your
+          Transform your{" "}
           <span className="inline-block bg-gradient-to-b from-[#7B61DB] to-[#4B32A8] bg-clip-text text-transparent">
             documents
           </span>{" "}
@@ -19,7 +19,7 @@ export default function Home() {
           Papermind AI turns your PDFs, and other documents into interactive knowledge bases. Ask questions, get insights, and unlock the power of your documents.
         </p>
 
-        <Link href="/dashboard" className="mt-5" target="_blank">
+        <Link href="/signup" className="mt-5">
           <Button size="lg" className="bg-[#5D3FD3] hover:bg-[#4B32A8] text-white font-semibold">
             Get Started <ArrowUpRight className="ml-2 w-5 h-5" />
           </Button>
@@ -145,8 +145,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-
       </div>
-    </>
+    </div>
   );
-}
+} 

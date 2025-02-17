@@ -1,5 +1,3 @@
-import Navbar from "@/components/landing/navbar";
-import Footer from "@/components/landing/footer";
 import Providers from "@/components/providers/providers";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
@@ -28,19 +26,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="light">
-      <Providers>
-        <body
-          className={cn(
-            "min-h-screen font-sans antialiased grainy flex flex-col",
-            jakarta.variable
-          )}
-        >
-          <Toaster />
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </body>
-      </Providers>
+      <body className={cn("font-sans antialiased", jakarta.variable)}>
+        <Providers>
+          <div className="min-h-screen flex flex-col">
+            <Toaster />
+            {children}
+          </div>
+        </Providers>
+      </body>
     </html>
   );
 }
