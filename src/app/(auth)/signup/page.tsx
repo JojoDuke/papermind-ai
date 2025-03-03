@@ -13,7 +13,7 @@ export default function SignUpPage() {
           Create your account
         </h1>
         <p className="mt-6 text-lg max-w-prose text-muted-foreground">
-          Welcome! Get started with your free account today.
+          Welcome! Get started with your free account today
         </p>
 
         <div className="flex flex-col w-full max-w-sm gap-4 mt-6">
