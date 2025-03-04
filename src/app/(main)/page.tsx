@@ -81,7 +81,7 @@ export default function Home() {
               Start exploring in minutes
             </h2>
             <p className="mt-4 text-lg text-black/60">
-              Unlock the knowledge in your documents with Papermind AI's intelligent document assistant
+              Unlock the knowledge in your documents with Papermind AI&apos;s intelligent document assistant
             </p>
           </div>
         </div>
