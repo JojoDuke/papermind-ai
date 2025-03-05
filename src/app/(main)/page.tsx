@@ -94,7 +94,7 @@ export default function Home() {
                 Sign up for an account
               </span>
               <span className="mt-2 text-black/60">
-                Either starting out with a free plan or choose our{" "}
+                Either start out with a free plan or choose our{" "}
                 <Link
                   href="/pricing"
                   className="text-purple-600 underline underline-offset-2"
