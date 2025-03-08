@@ -2,17 +2,21 @@
 
 import { trpc } from "@/app/_trpc/client";
 import UploadButton from "./upload-button";
-import { Ghost, Loader2, MessageSquare, Plus, Trash } from "lucide-react";
+import { Ghost, Loader2, LogOut, MessageSquare, Plus, Trash } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
 import Link from "next/link";
 import { format } from "date-fns";
 import { Button } from "../ui/button";
 import { useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
 const Dashboard = () => {
+  const router = useRouter();
   const [currentlyDeletingFile, setCurrentlyDeletingFile] = useState<
     string | null
   >(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const utils = trpc.useContext();
 
@@ -30,12 +34,39 @@ const Dashboard = () => {
     },
   });
 
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await supabase.auth.signOut();
+      router.push('/signin');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
   return (
     <main className="mx-auto max-w-7xl md:p-10">
       <div className="mt-8 flex flex-col items-start justify-between gap-4 border-b border-gray-200 pb-5 sm:flex-row sm:items-center sm:gap-0">
         <h1 className="mb-3 font-bold text-5xl text-black">My Files</h1>
 
-        <UploadButton />
+        <div className="flex items-center gap-2">
+          <UploadButton />
+          <Button 
+            onClick={handleLogout} 
+            variant="outline" 
+            size="sm"
+            disabled={isLoggingOut}
+          >
+            {isLoggingOut ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            ) : (
+              <LogOut className="h-4 w-4 mr-2" />
+            )}
+            Logout
+          </Button>
+        </div>
       </div>
 
       {/* Display user files */}

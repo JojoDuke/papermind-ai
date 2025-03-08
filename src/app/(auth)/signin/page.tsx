@@ -1,9 +1,73 @@
+'use client'
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
 export default function SignInPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Form state
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  
+  // Check if form is valid
+  const isFormValid = email && password;
+  
+  // Handle signin
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate form
+    if (!isFormValid) return;
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Sign in with Supabase Auth
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (signInError) throw signInError;
+      
+      // Redirect to dashboard
+      window.location.href = '/dashboard';
+    } catch (err: any) {
+      setError(err.message || 'An error occurred during sign in');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle password reset
+  const handleResetPassword = async () => {
+    if (!email) {
+      setError('Please enter your email address to reset your password');
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+      
+      alert('Password reset email sent. Please check your inbox.');
+    } catch (err: any) {
+      setError(err.message || 'An error occurred while sending the reset email');
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-4 pt-8 pb-16 md:pt-12 md:pb-24 bg-[#f8f9fa]">
       {/* Logo or icon at the top */}
@@ -24,8 +88,14 @@ export default function SignInPage() {
       <h1 className="text-2xl font-bold mb-8 text-gray-800">Sign in</h1>
 
       <div className="w-full max-w-md bg-white rounded-lg p-8 shadow-sm border border-gray-200">
-        <div className="space-y-7">
-          <div className="space-y-2.5 mb-6">
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-200 text-red-700 rounded-md text-sm">
+            {error}
+          </div>
+        )}
+        
+        <form onSubmit={handleSignIn} className="space-y-8">
+          <div className="space-y-2.5">
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               Email
             </label>
@@ -33,39 +103,84 @@ export default function SignInPage() {
               id="email"
               type="email"
               placeholder="Your email address"
-              className="w-full border-gray-300 focus:border-primary focus:ring-primary"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full outline-none focus:outline-none border-gray-300"
+              style={{ boxShadow: 'none' }}
+              required
             />
           </div>
 
-          <Button className="w-full bg-primary hover:bg-primary-light text-white font-medium py-2.5">
-            Continue
-          </Button>
-
-          <div className="relative py-2">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-gray-200" />
+          <div className="space-y-2.5 mt-6">
+            <div className="flex justify-between items-center">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <button 
+                type="button" 
+                onClick={handleResetPassword}
+                className="text-xs text-primary hover:underline font-medium"
+              >
+                Forgot your password?
+              </button>
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-4 text-gray-500 font-medium">
-                OR
-              </span>
-            </div>
+            <Input
+              id="password"
+              type="password"
+              placeholder="Your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full outline-none focus:outline-none border-gray-300"
+              style={{ boxShadow: 'none' }}
+              required
+            />
           </div>
 
           <Button 
-            variant="outline" 
-            className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 font-medium py-2.5 flex items-center justify-center"
+            type="submit"
+            className="w-full bg-primary hover:bg-primary-light text-white font-medium py-2.5 mt-4"
+            disabled={!isFormValid || loading}
           >
-            <Image
-              src="/google.svg"
-              alt="Google"
-              width={20}
-              height={20}
-              className="mr-3"
-            />
-            Continue with Google
+            {loading ? 'Signing in...' : 'Continue'}
           </Button>
+        </form>
+
+        <div className="relative py-6">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-gray-200" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-4 text-gray-500 font-medium">
+              OR
+            </span>
+          </div>
         </div>
+
+        <Button 
+          variant="outline" 
+          className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 font-medium py-2.5 flex items-center justify-center"
+          onClick={async () => {
+            try {
+              await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                  redirectTo: `${window.location.origin}/dashboard`
+                }
+              });
+            } catch (err) {
+              console.error(err);
+            }
+          }}
+        >
+          <Image
+            src="/google.svg"
+            alt="Google"
+            width={20}
+            height={20}
+            className="mr-3"
+          />
+          Continue with Google
+        </Button>
 
         <div className="mt-8 text-center text-sm">
           <p className="text-gray-600">

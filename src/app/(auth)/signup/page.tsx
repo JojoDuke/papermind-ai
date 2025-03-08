@@ -67,11 +67,10 @@ export default function SignUpPage() {
         }
       }
       
-      // Redirect to dashboard or confirmation page
-      router.push('/dashboard');
+      // Redirect to dashboard
+      window.location.href = '/dashboard';
     } catch (err: any) {
       setError(err.message || 'An error occurred during sign up');
-      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -193,13 +192,12 @@ export default function SignUpPage() {
           className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 font-medium py-2.5 flex items-center justify-center"
           onClick={async () => {
             try {
-              const { data, error } = await supabase.auth.signInWithOAuth({
+              await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                  redirectTo: `${window.location.origin}/auth/callback`
+                  redirectTo: `${window.location.origin}/dashboard`
                 }
               });
-              if (error) throw error;
             } catch (err) {
               console.error(err);
             }
