@@ -22,8 +22,8 @@ export function AuthButtons({ mobile = false }: AuthButtonsProps) {
       >
         Sign In
       </Link>
-      <Link
-        href="/signin"
+      <button
+        onClick={() => window.location.href = '/signin'}
         className={cn(
           buttonVariants({
             size: "sm",
@@ -33,7 +33,7 @@ export function AuthButtons({ mobile = false }: AuthButtonsProps) {
         )}
       >
         Get Started
-      </Link>
+      </button>
     </>
   );
 } 

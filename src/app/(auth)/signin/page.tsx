@@ -1,14 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LoginLink } from "@kinde-oss/kinde-auth-nextjs/server";
 import Image from "next/image";
 import Link from "next/link";
 
 export default function SignInPage() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-4 bg-[#f8f9fa]">
+    <div className="flex flex-col items-center justify-center min-h-screen px-4 pt-8 pb-16 md:pt-12 md:pb-24 bg-[#f8f9fa]">
       {/* Logo or icon at the top */}
-      <div className="mb-8">
+      <div className="mb-10 mt-2">
         <div className="w-14 h-14 bg-primary rounded-md flex items-center justify-center">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -38,11 +37,9 @@ export default function SignInPage() {
             />
           </div>
 
-          <LoginLink>
-            <Button className="w-full bg-primary hover:bg-primary-light text-white font-medium py-2.5">
-              Continue
-            </Button>
-          </LoginLink>
+          <Button className="w-full bg-primary hover:bg-primary-light text-white font-medium py-2.5">
+            Continue
+          </Button>
 
           <div className="relative py-2">
             <div className="absolute inset-0 flex items-center">
@@ -55,21 +52,19 @@ export default function SignInPage() {
             </div>
           </div>
 
-          <LoginLink authUrlParams={{ provider: "google" }}>
-            <Button 
-              variant="outline" 
-              className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 font-medium py-2.5 flex items-center justify-center"
-            >
-              <Image
-                src="/google.svg"
-                alt="Google"
-                width={20}
-                height={20}
-                className="mr-3"
-              />
-              Continue with Google
-            </Button>
-          </LoginLink>
+          <Button 
+            variant="outline" 
+            className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 font-medium py-2.5 flex items-center justify-center"
+          >
+            <Image
+              src="/google.svg"
+              alt="Google"
+              width={20}
+              height={20}
+              className="mr-3"
+            />
+            Continue with Google
+          </Button>
         </div>
 
         <div className="mt-8 text-center text-sm">
@@ -80,6 +75,19 @@ export default function SignInPage() {
             </Link>
           </p>
         </div>
+      </div>
+
+      <div className="mt-12 mb-8 text-center text-xs text-gray-500 max-w-md px-4">
+        <p>
+          By logging in to your account, you agree to the{" "}
+          <Link href="/terms" className="text-primary hover:underline">
+            Terms of Service
+          </Link>{" "}
+          and{" "}
+          <Link href="/privacy" className="text-primary hover:underline">
+            Privacy Policy
+          </Link>
+        </p>
       </div>
     </div>
   );
