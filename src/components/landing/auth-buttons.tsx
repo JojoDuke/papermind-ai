@@ -23,7 +23,7 @@ export function AuthButtons({ mobile = false }: AuthButtonsProps) {
         Sign In
       </Link>
       <Link
-        href="/signup"
+        href="/signin"
         className={cn(
           buttonVariants({
             size: "sm",

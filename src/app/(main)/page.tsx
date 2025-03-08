@@ -19,7 +19,7 @@ export default function Home() {
           Papermind AI turns your PDFs, and other documents into interactive knowledge bases. Ask questions, get insights, and unlock the power of your documents.
         </p>
 
-        <Link href="/signup" className="mt-5">
+        <Link href="/signin" className="mt-5">
           <Button size="lg" className="bg-[#5D3FD3] hover:bg-[#4B32A8] text-white font-semibold">
             Get Started <ArrowUpRight className="ml-2 w-5 h-5" />
           </Button>
@@ -91,7 +91,7 @@ export default function Home() {
             <div className="flex flex-col space-y-2 border-l-4 border-zinc-300 py-2 pl-4 md:border-l-0 md:border-t-2 md:pb-0 md:pl-0 md:pt-4">
               <span className="text-sm font-medium text-purple-600">Step 1</span>
               <span className="text-xl font-semibold">
-                Sign up for an account
+                Sign in to your account
               </span>
               <span className="mt-2 text-black/60">
                 Either start out with a free plan or choose our{" "}

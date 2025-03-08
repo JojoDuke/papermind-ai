@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { RegisterLink } from "@kinde-oss/kinde-auth-nextjs/server";
+import { LoginLink } from "@kinde-oss/kinde-auth-nextjs/server";
 import Image from "next/image";
 import Link from "next/link";
 
-export default function SignUpPage() {
+export default function SignInPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-4 bg-[#f8f9fa]">
       {/* Logo or icon at the top */}
@@ -22,23 +22,11 @@ export default function SignUpPage() {
         </div>
       </div>
 
-      <h1 className="text-2xl font-bold mb-8 text-gray-800">Sign up</h1>
+      <h1 className="text-2xl font-bold mb-8 text-gray-800">Sign in</h1>
 
       <div className="w-full max-w-md bg-white rounded-lg p-8 shadow-sm border border-gray-200">
-        <div className="space-y-6">
-          <div className="space-y-2.5">
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-              Name
-            </label>
-            <Input
-              id="name"
-              type="text"
-              placeholder="Your name"
-              className="w-full border-gray-300 focus:border-primary focus:ring-primary"
-            />
-          </div>
-
-          <div className="space-y-2.5">
+        <div className="space-y-7">
+          <div className="space-y-2.5 mb-6">
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               Email
             </label>
@@ -50,23 +38,11 @@ export default function SignUpPage() {
             />
           </div>
 
-          <div className="space-y-2.5">
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-              Password
-            </label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Create a password"
-              className="w-full border-gray-300 focus:border-primary focus:ring-primary"
-            />
-          </div>
-
-          <RegisterLink>
-            <Button className="w-full bg-primary hover:bg-primary-light text-white font-medium py-2.5 mt-4">
-              Sign up
+          <LoginLink>
+            <Button className="w-full bg-primary hover:bg-primary-light text-white font-medium py-2.5">
+              Continue
             </Button>
-          </RegisterLink>
+          </LoginLink>
 
           <div className="relative py-2">
             <div className="absolute inset-0 flex items-center">
@@ -79,7 +55,7 @@ export default function SignUpPage() {
             </div>
           </div>
 
-          <RegisterLink authUrlParams={{ provider: "google" }}>
+          <LoginLink authUrlParams={{ provider: "google" }}>
             <Button 
               variant="outline" 
               className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 font-medium py-2.5 flex items-center justify-center"
@@ -93,14 +69,14 @@ export default function SignUpPage() {
               />
               Continue with Google
             </Button>
-          </RegisterLink>
+          </LoginLink>
         </div>
 
         <div className="mt-8 text-center text-sm">
           <p className="text-gray-600">
-            Already have an account?{" "}
-            <Link href="/signin" className="text-primary hover:underline font-medium">
-              Sign in
+            Don't have an account?{" "}
+            <Link href="/signup" className="text-primary hover:underline font-medium">
+              Sign up
             </Link>
           </p>
         </div>
