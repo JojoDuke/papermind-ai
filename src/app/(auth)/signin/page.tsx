@@ -40,7 +40,8 @@ export default function SignInPage() {
       if (signInError) throw signInError;
       
       // Redirect to dashboard
-      window.location.href = '/dashboard';
+      router.refresh();
+      router.push('/dashboard');
     } catch (err: any) {
       setError(err.message || 'An error occurred during sign in');
     } finally {
@@ -164,7 +165,7 @@ export default function SignInPage() {
               await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                  redirectTo: `${window.location.origin}/dashboard`
+                  redirectTo: `${window.location.origin}/auth/callback`
                 }
               });
             } catch (err) {
@@ -184,7 +185,7 @@ export default function SignInPage() {
 
         <div className="mt-8 text-center text-sm">
           <p className="text-gray-600">
-            Don&apos;t have an account?{" "}
+            Don't have an account?{" "}
             <Link href="/signup" className="text-primary hover:underline font-medium">
               Sign up
             </Link>
