@@ -68,7 +68,8 @@ export default function SignUpPage() {
       }
       
       // Redirect to dashboard
-      window.location.href = '/dashboard';
+      router.refresh();
+      router.push('/dashboard');
     } catch (err: any) {
       setError(err.message || 'An error occurred during sign up');
     } finally {
