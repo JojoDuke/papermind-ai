@@ -1,15 +1,17 @@
 "use client";
 
-import { LogOut, Loader2 } from "lucide-react";
+import { LogOut, Loader2, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
+import { Tooltip } from "../ui/tooltip";
 import Link from "next/link";
 
 const Dashboard = () => {
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -23,26 +25,45 @@ const Dashboard = () => {
     }
   };
 
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed(!isSidebarCollapsed);
+  };
+
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
-        {/* Logo/Brand */}
-        <div className="p-6 border-b border-gray-200">
-          <Link href="/dashboard" className="flex items-center">
-            <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center mr-3">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="white"
-                className="w-5 h-5"
-              >
-                <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-8.4 8.4a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32l8.4-8.4z" />
-                <path d="M5.25 5.25a3 3 0 00-3 3v10.5a3 3 0 003 3h10.5a3 3 0 003-3V13.5a.75.75 0 00-1.5 0v5.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5V8.25a1.5 1.5 0 011.5-1.5h5.25a.75.75 0 000-1.5H5.25z" />
-              </svg>
-            </div>
-            <span className="text-xl font-semibold text-gray-800">Papermind</span>
-          </Link>
+    <div className="relative h-screen bg-gradient-to-br from-white via-purple-100 to-indigo-200 overflow-hidden">
+      {/* Gradient overlay elements */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-200/40 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/3 left-0 w-72 h-72 bg-indigo-200/30 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-1/3 w-80 h-80 bg-purple-300/20 rounded-full blur-3xl"></div>
+      </div>
+      
+      {/* Content overlay when sidebar is expanded */}
+      {!isSidebarCollapsed && (
+        <div className="absolute top-0 left-0 w-full h-full bg-black/10 z-5 md:hidden" onClick={toggleSidebar}></div>
+      )}
+      
+      {/* Sidebar - Absolute positioned */}
+      <div 
+        className={`absolute top-0 left-0 h-full bg-white border-r border-gray-200 shadow-lg flex flex-col transition-all duration-300 z-10 ${
+          isSidebarCollapsed ? 'w-16' : 'w-64'
+        }`}
+      >
+        {/* Sidebar Header with Toggle Button */}
+        <div className={`p-4 border-b border-gray-200 flex ${isSidebarCollapsed ? 'justify-center' : 'justify-start'}`}>
+          <Tooltip 
+            content={isSidebarCollapsed ? "Open sidebar" : "Close sidebar"}
+            side={isSidebarCollapsed ? "right" : "bottom"}
+          >
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="p-1 hover:bg-gray-100"
+              onClick={toggleSidebar}
+            >
+              {isSidebarCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
+            </Button>
+          </Tooltip>
         </div>
         
         {/* Navigation Links */}
@@ -54,30 +75,44 @@ const Dashboard = () => {
         
         {/* Logout Button at bottom of sidebar */}
         <div className="p-4 border-t border-gray-200">
-          <Button 
-            onClick={handleLogout} 
-            variant="outline" 
-            className="w-full justify-start"
-            disabled={isLoggingOut}
+          <Tooltip 
+            content="Log out of this account"
+            side={isSidebarCollapsed ? "right" : "top"}
           >
-            {isLoggingOut ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            {isSidebarCollapsed ? (
+              <div 
+                onClick={handleLogout}
+                className="flex justify-center items-center cursor-pointer bg-red-50 border border-red-300 rounded-[10px] p-2 text-white hover:bg-red-100 transition-colors"
+                aria-label="Logout"
+              >
+                {isLoggingOut ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-red-600" />
+                ) : (
+                  <LogOut className="h-5 w-5 text-red-600" />
+                )}
+              </div>
             ) : (
-              <LogOut className="h-4 w-4 mr-2" />
+              <Button 
+                onClick={handleLogout} 
+                variant="destructive"
+                className="w-full justify-center border border-red-300 rounded-md"
+                disabled={isLoggingOut}
+              >
+                {isLoggingOut ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <LogOut className="h-4 w-4 mr-2" />
+                )}
+                <span>Logout</span>
+              </Button>
             )}
-            Logout
-          </Button>
+          </Tooltip>
         </div>
       </div>
       
-      {/* Main Content */}
-      <div className="flex-1 overflow-auto p-8">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">Dashboard</h1>
-        
-        {/* Empty dashboard content */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <p className="text-gray-600">Your dashboard content will appear here.</p>
-        </div>
+      {/* Main Content - Fixed width regardless of sidebar state */}
+      <div className={`relative h-full w-full p-8 flex items-center justify-center z-0 transition-all duration-300 ${!isSidebarCollapsed ? 'opacity-90' : 'opacity-100'}`}>
+        <div className="w-3/4 h-3/4 bg-white border border-gray-200 rounded-xl shadow-md"></div>
       </div>
     </div>
   );
