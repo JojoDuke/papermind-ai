@@ -1,30 +1,30 @@
 import { createUploadthing, type FileRouter } from "uploadthing/next";
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { db } from "@/db";
 
+// Create a new instance of UploadThing
 const f = createUploadthing();
 
+// Define the file router
 export const ourFileRouter = {
+  // Define a route for PDF uploads
   pdfUploader: f({ pdf: { maxFileSize: "4MB" } })
-    .middleware(async ({ req }) => {
-      const { getUser } = getKindeServerSession();
-      const user = await getUser();
-
-      if (!user || !user.id) throw new Error("Unauthorized");
-
-      return { userId: user.id };
+    .middleware(() => {
+      // No authentication or database operations in middleware
+      console.log("[UploadThing] Middleware called");
+      return { userId: "test-user" };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      const createdFile = await db.file.create({
-        data: {
-          key: file.key,
-          name: file.name,
-          userId: metadata.userId,
-          url: `https://uploadthing-prod.s3.us-west-2.amazonaws.com/${file.key}`,
-          uploadStatus: "PROCESSING",
-        },
+      // Log the file details but don't interact with the database
+      console.log("[UploadThing] Upload complete:", {
+        userId: metadata.userId,
+        fileName: file.name,
+        fileSize: file.size,
+        fileKey: file.key,
+        fileUrl: file.url
       });
+      
+      // Return success without database operations
+      return { success: true };
     }),
-} satisfies FileRouter;
+};
 
 export type OurFileRouter = typeof ourFileRouter;

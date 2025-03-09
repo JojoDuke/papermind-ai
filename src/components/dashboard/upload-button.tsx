@@ -1,10 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent } from "../ui/dialog";
-import { DialogTrigger } from "@radix-ui/react-dialog";
-import { Button } from "../ui/button";
-
 import Dropzone from "react-dropzone";
 import { Cloud, File, Loader2 } from "lucide-react";
 import { Progress } from "../ui/progress";
@@ -13,7 +9,11 @@ import { useToast } from "../ui/use-toast";
 import { trpc } from "@/app/_trpc/client";
 import { useRouter } from "next/navigation";
 
-const UploadDropzone = () => {
+interface UploadDropzoneProps {
+  onUploadComplete?: () => void;
+}
+
+const UploadDropzone = ({ onUploadComplete }: UploadDropzoneProps) => {
   const router = useRouter();
 
   const [isUploading, setIsUploading] = useState<boolean>(false);
@@ -25,6 +25,9 @@ const UploadDropzone = () => {
 
   const { mutate: startPolling } = trpc.getFile.useMutation({
     onSuccess: (file) => {
+      if (onUploadComplete) {
+        onUploadComplete();
+      }
       router.push(`/dashboard/${file.id}`);
     },
     retry: true,
@@ -58,6 +61,8 @@ const UploadDropzone = () => {
         const res = await startUpload(acceptedFile);
 
         if (!res) {
+          setIsUploading(false);
+          clearInterval(progressInterval);
           return toast({
             title: "Something went wrong",
             description: "Please try again later",
@@ -70,6 +75,8 @@ const UploadDropzone = () => {
         const key = fileResponse?.key;
 
         if (!key) {
+          setIsUploading(false);
+          clearInterval(progressInterval);
           return toast({
             title: "Something went wrong",
             description: "Please try again later",
@@ -132,7 +139,7 @@ const UploadDropzone = () => {
               ) : null}
 
               <input
-                {...getInputProps}
+                {...getInputProps()}
                 type="file"
                 id="dropzone-file"
                 className="hidden"
@@ -145,25 +152,5 @@ const UploadDropzone = () => {
   );
 };
 
-const UploadButton = () => {
-  const [isOpen, setIsOpen] = useState<boolean>(false);
-  return (
-    <Dialog
-      open={isOpen}
-      onOpenChange={(v) => {
-        if (!v) {
-          setIsOpen(v);
-        }
-      }}
-    >
-      <DialogTrigger onClick={() => setIsOpen(true)} asChild>
-        <Button>Upload PDF</Button>
-      </DialogTrigger>
-      <DialogContent>
-        <UploadDropzone />
-      </DialogContent>
-    </Dialog>
-  );
-};
-
-export default UploadButton;
+// Export the UploadDropzone directly as the default export
+export default UploadDropzone;
