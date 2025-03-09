@@ -1,38 +1,15 @@
 "use client";
 
-import { trpc } from "@/app/_trpc/client";
-import UploadButton from "./upload-button";
-import { Ghost, Loader2, LogOut, MessageSquare, Plus, Trash } from "lucide-react";
-import Skeleton from "react-loading-skeleton";
-import Link from "next/link";
-import { format } from "date-fns";
-import { Button } from "../ui/button";
+import { LogOut, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import { Button } from "../ui/button";
+import Link from "next/link";
 
 const Dashboard = () => {
   const router = useRouter();
-  const [currentlyDeletingFile, setCurrentlyDeletingFile] = useState<
-    string | null
-  >(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-  const utils = trpc.useContext();
-
-  const { data: files, isLoading } = trpc.getUserFiles.useQuery();
-
-  const { mutate: deleteFile } = trpc.deleteFile.useMutation({
-    onSuccess: () => {
-      utils.getUserFiles.invalidate();
-    },
-    onMutate({ id }) {
-      setCurrentlyDeletingFile(id);
-    },
-    onSettled() {
-      setCurrentlyDeletingFile(null);
-    },
-  });
 
   const handleLogout = async () => {
     try {
@@ -47,16 +24,40 @@ const Dashboard = () => {
   };
 
   return (
-    <main className="mx-auto max-w-7xl md:p-10">
-      <div className="mt-8 flex flex-col items-start justify-between gap-4 border-b border-gray-200 pb-5 sm:flex-row sm:items-center sm:gap-0">
-        <h1 className="mb-3 font-bold text-5xl text-black">My Files</h1>
-
-        <div className="flex items-center gap-2">
-          <UploadButton />
+    <div className="flex h-screen bg-gray-50">
+      {/* Sidebar */}
+      <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
+        {/* Logo/Brand */}
+        <div className="p-6 border-b border-gray-200">
+          <Link href="/dashboard" className="flex items-center">
+            <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center mr-3">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="white"
+                className="w-5 h-5"
+              >
+                <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-8.4 8.4a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32l8.4-8.4z" />
+                <path d="M5.25 5.25a3 3 0 00-3 3v10.5a3 3 0 003 3h10.5a3 3 0 003-3V13.5a.75.75 0 00-1.5 0v5.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5V8.25a1.5 1.5 0 011.5-1.5h5.25a.75.75 0 000-1.5H5.25z" />
+              </svg>
+            </div>
+            <span className="text-xl font-semibold text-gray-800">Papermind</span>
+          </Link>
+        </div>
+        
+        {/* Navigation Links */}
+        <div className="flex-1 overflow-y-auto py-4 px-3">
+          <ul className="space-y-2">
+            {/* Add navigation items here later */}
+          </ul>
+        </div>
+        
+        {/* Logout Button at bottom of sidebar */}
+        <div className="p-4 border-t border-gray-200">
           <Button 
             onClick={handleLogout} 
             variant="outline" 
-            size="sm"
+            className="w-full justify-start"
             disabled={isLoggingOut}
           >
             {isLoggingOut ? (
@@ -68,72 +69,17 @@ const Dashboard = () => {
           </Button>
         </div>
       </div>
-
-      {/* Display user files */}
-      {files && files.length !== 0 ? (
-        <ul className="mt-8 grid grid-cols-1 gap-6 divide-y divide-zinc-200 md:grid-cols-2 lg:grid-cols-3">
-          {files
-            .sort(
-              (a, b) =>
-                new Date(b.createdAt).getTime() -
-                new Date(a.createdAt).getTime()
-            )
-            .map((file) => (
-              <li
-                className="col-span-1 divide-y divide-gray-200 rounded-lg bg-white shadow transition hover:shadow-lg"
-                key={file.id}
-              >
-                <Link
-                  href={`/dashboard/${file.id}`}
-                  className="fle flex-col gap-2"
-                >
-                  <div className="pt-6 px-6 flex w-full items-center justify-between space-x-6">
-                    <div className="h-10 w-10 flex-shrink-0 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500" />
-                    <div className="flex-1 truncate">
-                      <div className="flex items-center space-x-3">
-                        <h3 className=" truncate text-lg font-medium text-black">
-                          {file.name}
-                        </h3>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-
-                <div className="px-6 mt-4 grid grid-cols-3 place-items-center py-2 gap-6 text-xs text-black/60">
-                  <div className="flex items-center gap-2">
-                    <Plus className="h-4 w-4" />
-                    {format(new Date(file.createdAt), "MMM yyyy")}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MessageSquare className="h-4 w-4" />
-                    mocked
-                  </div>
-                  <Button
-                    onClick={() => deleteFile({ id: file.id })}
-                    variant="destructive"
-                    className=""
-                    size="sm"
-                  >
-                    {currentlyDeletingFile === file.id ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Trash className="w-4 h-4" />
-                    )}
-                  </Button>
-                </div>
-              </li>
-            ))}
-        </ul>
-      ) : isLoading ? (
-        <Skeleton height={100} className="my-2" count={3} />
-      ) : (
-        <div className="mt-16 flex flex-col items-center gap-2">
-          <Ghost className="h-8 w-8 text-black" />
-          <h3 className=" font-semibold text-xl">Pretty empty around here</h3>
-          <p>Let&apos;s upload your first PDF.</p>
+      
+      {/* Main Content */}
+      <div className="flex-1 overflow-auto p-8">
+        <h1 className="text-2xl font-bold text-gray-800 mb-6">Dashboard</h1>
+        
+        {/* Empty dashboard content */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <p className="text-gray-600">Your dashboard content will appear here.</p>
         </div>
-      )}
-    </main>
+      </div>
+    </div>
   );
 };
 
