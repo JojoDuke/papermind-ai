@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation';
 import Dashboard from "@/components/dashboard/dashboard";
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 
@@ -10,10 +9,6 @@ export default async function Page() {
   // Check if user is authenticated
   const { data: { session } } = await supabase.auth.getSession();
   
-  // If not authenticated, redirect to signin
-  if (!session) {
-    redirect('/signin');
-  }
-  
+  // Render the dashboard component
   return <Dashboard />;
 }

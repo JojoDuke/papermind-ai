@@ -2,6 +2,8 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   const cookieStore = cookies()
   const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
@@ -13,5 +15,6 @@ export async function GET(req: NextRequest) {
   }
 
   // URL to redirect to after sign in process completes
-  return NextResponse.redirect(new URL('/dashboard', req.url))
+  // Use 303 See Other to ensure a GET request and proper history management
+  return NextResponse.redirect(new URL('/dashboard', req.url), { status: 303 });
 } 

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
@@ -20,6 +20,13 @@ export default function SignInPage() {
   // Check if form is valid
   const isFormValid = email && password;
   
+  // Clear browser history on page load
+  useEffect(() => {
+    // Replace current history entry with the signin page
+    // This ensures clicking back will go to the previous site/page
+    window.history.replaceState(null, '', '/signin');
+  }, []);
+  
   // Handle signin
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,17 +39,23 @@ export default function SignInPage() {
     
     try {
       // Sign in with Supabase Auth
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password
       });
       
       if (signInError) throw signInError;
       
-      // Redirect to dashboard
-      router.refresh();
-      router.push('/dashboard');
+      // Ensure session is established before redirecting
+      if (data.session) {
+        // Use window.location.replace to replace the current history entry
+        // This prevents the signin page from being in the history stack
+        window.location.replace('/dashboard');
+      } else {
+        throw new Error("Failed to establish session");
+      }
     } catch (err: any) {
+      console.error("Sign-in error:", err);
       setError(err.message || 'An error occurred during sign in');
     } finally {
       setLoading(false);
@@ -73,17 +86,19 @@ export default function SignInPage() {
     <div className="flex flex-col items-center justify-center min-h-screen px-4 pt-8 pb-16 md:pt-12 md:pb-24 bg-[#f8f9fa]">
       {/* Logo or icon at the top */}
       <div className="mb-10 mt-2">
-        <div className="w-14 h-14 bg-primary rounded-md flex items-center justify-center">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="white"
-            className="w-7 h-7"
-          >
-            <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-8.4 8.4a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32l8.4-8.4z" />
-            <path d="M5.25 5.25a3 3 0 00-3 3v10.5a3 3 0 003 3h10.5a3 3 0 003-3V13.5a.75.75 0 00-1.5 0v5.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5V8.25a1.5 1.5 0 011.5-1.5h5.25a.75.75 0 000-1.5H5.25z" />
-          </svg>
-        </div>
+        <Link href="/" className="inline-block">
+          <div className="w-14 h-14 bg-primary rounded-md flex items-center justify-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="white"
+              className="w-7 h-7"
+            >
+              <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-8.4 8.4a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32l8.4-8.4z" />
+              <path d="M5.25 5.25a3 3 0 00-3 3v10.5a3 3 0 003 3h10.5a3 3 0 003-3V13.5a.75.75 0 00-1.5 0v5.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5V8.25a1.5 1.5 0 011.5-1.5h5.25a.75.75 0 000-1.5H5.25z" />
+            </svg>
+          </div>
+        </Link>
       </div>
 
       <h1 className="text-2xl font-bold mb-8 text-gray-800">Sign in</h1>
@@ -95,7 +110,7 @@ export default function SignInPage() {
           </div>
         )}
         
-        <form onSubmit={handleSignIn} className="space-y-8">
+        <form onSubmit={handleSignIn} className="space-y-6">
           <div className="space-y-2.5">
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               Email
@@ -112,17 +127,17 @@ export default function SignInPage() {
             />
           </div>
 
-          <div className="space-y-2.5 mt-6">
+          <div className="space-y-2.5">
             <div className="flex justify-between items-center">
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
               </label>
               <button 
-                type="button" 
+                type="button"
                 onClick={handleResetPassword}
-                className="text-xs text-primary hover:underline font-medium"
+                className="text-xs text-primary hover:underline"
               >
-                Forgot your password?
+                Forgot password?
               </button>
             </div>
             <Input
@@ -142,7 +157,7 @@ export default function SignInPage() {
             className="w-full bg-primary hover:bg-primary-light text-white font-medium py-2.5 mt-4"
             disabled={!isFormValid || loading}
           >
-            {loading ? 'Signing in...' : 'Continue'}
+            {loading ? 'Signing in...' : 'Sign in'}
           </Button>
         </form>
 
@@ -162,14 +177,18 @@ export default function SignInPage() {
           className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 font-medium py-2.5 flex items-center justify-center"
           onClick={async () => {
             try {
-              await supabase.auth.signInWithOAuth({
+              const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                  redirectTo: `${window.location.origin}/dashboard`
+                  redirectTo: `${window.location.origin}/auth/callback`
                 }
               });
+              
+              if (error) {
+                console.error("OAuth error:", error);
+              }
             } catch (err) {
-              console.error(err);
+              console.error("OAuth exception:", err);
             }
           }}
         >
@@ -191,19 +210,6 @@ export default function SignInPage() {
             </Link>
           </p>
         </div>
-      </div>
-
-      <div className="mt-12 mb-8 text-center text-xs text-gray-500 max-w-md px-4">
-        <p>
-          By logging in to your account, you agree to the{" "}
-          <Link href="/terms" className="text-primary hover:underline">
-            Terms of Service
-          </Link>{" "}
-          and{" "}
-          <Link href="/privacy" className="text-primary hover:underline">
-            Privacy Policy
-          </Link>
-        </p>
       </div>
     </div>
   );

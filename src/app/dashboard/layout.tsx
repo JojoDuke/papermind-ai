@@ -35,6 +35,13 @@ export default function DashboardLayout({
     checkAuth();
   }, []);
 
+  // Clear browser history on dashboard load
+  useEffect(() => {
+    // Replace current history entry with the dashboard page
+    // This ensures clicking back will go to the homepage
+    window.history.replaceState(null, '', '/dashboard');
+  }, []);
+
   if (isLoading) {
     return <Loading />;
   }
