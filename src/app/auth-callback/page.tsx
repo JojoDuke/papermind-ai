@@ -1,30 +1,31 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { trpc } from "../_trpc/client";
 import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 const Page = () => {
   const router = useRouter();
-
   const searchParams = useSearchParams();
   const origin = searchParams.get("origin");
+  const supabase = createClientComponentClient();
 
-  trpc.authCallback.useQuery(undefined, {
-    onSuccess: ({ success }) => {
-      if (success) {
-        // user is synced to db
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session && session.user) {
+        // User is authenticated, redirect to dashboard or origin
         router.push(origin ? `/${origin}` : "/dashboard");
-      }
-    },
-    onError: (err) => {
-      if (err.data?.code === "UNAUTHORIZED") {
+      } else {
+        // User is not authenticated, redirect to sign-in
         router.push("/sign-in");
       }
-    },
-    retry: true,
-    retryDelay: 500,
-  });
+    };
+
+    checkUser();
+  }, [origin, router, supabase.auth]);
 
   return (
     <div className="w-full mt-24 flex justify-center">
