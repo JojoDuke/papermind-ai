@@ -33,7 +33,7 @@ interface UploadedFile {
 const Dashboard = () => {
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [isUploadHovered, setIsUploadHovered] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isUploading, setIsUploading] = useState<boolean>(false);
@@ -236,7 +236,7 @@ const Dashboard = () => {
         {({ getRootProps, getInputProps, acceptedFiles }) => (
           <div 
             {...getRootProps()}
-            className="border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 w-full h-64 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors"
+            className="w-2/3 mx-auto h-64 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors"
           >
             <input {...getInputProps()} />
             
@@ -290,9 +290,9 @@ const Dashboard = () => {
     </div>
   );
 
-  // Render the split view with writing area and PDF preview
-  const renderSplitView = () => (
-    <div className="w-11/12 h-5/6 bg-white border border-gray-200 rounded-xl shadow-md flex flex-row p-0 overflow-hidden">
+  // Render the document workspace with writing area and PDF preview
+  const renderDocumentWorkspace = () => (
+    <div className="w-11/12 h-5/6 bg-white border border-gray-200 rounded-xl shadow-md flex flex-row p-0 overflow-hidden document-workspace">
       {/* Left side - Writing area */}
       <div className="w-5/12 border-r border-gray-200 flex flex-col">
         <div className="p-6 flex-1 flex flex-col">
@@ -331,7 +331,7 @@ const Dashboard = () => {
       
       {/* Main Content - Fixed width regardless of sidebar state */}
       <div className="relative h-full w-full p-8 flex items-center justify-center z-0">
-        {hasUploadedFile ? renderSplitView() : renderUploadArea()}
+        {hasUploadedFile ? renderDocumentWorkspace() : renderUploadArea()}
       </div>
       
       {/* Content overlay when sidebar is expanded */}
