@@ -54,6 +54,29 @@ const typingAnimation = `
   }
 `;
 
+// Implement a faster letter-by-letter fade-in effect with proper spacing
+const LetterFadeIn = ({ text }: { text: string }) => {
+  return (
+    <span>
+      {text.split('').map((char, index) => (
+        <span
+          key={index}
+          style={{
+            display: 'inline-block',
+            opacity: 0,
+            animation: `fadeIn 0.3s ease-in-out forwards`,
+            animationDelay: `${index * 0.03}s`,
+            whiteSpace: 'pre', // Preserve spaces
+            fontSize: '15px', // Set text size to 15px
+          }}
+        >
+          {char}
+        </span>
+      ))}
+    </span>
+  );
+};
+
 const ChatInterface = () => {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
@@ -157,6 +180,9 @@ const ChatInterface = () => {
 
   return (
     <div className="flex flex-col h-full">
+      {/* Add the keyframes for the animations */}
+      <style>{fadeInAnimation}</style>
+      
       {/* Custom scrollbar styles */}
       <style>{`
         /* Custom scrollbar */
@@ -200,11 +226,7 @@ const ChatInterface = () => {
               </div>
             ) : (
               <div className="max-w-[80%]">
-                {message.isTyping ? (
-                  <Typewriter text={message.content} speed={25} />
-                ) : (
-                  <p className="text-sm text-gray-800">{message.content}</p>
-                )}
+                <LetterFadeIn text={message.content} />
               </div>
             )}
           </div>
