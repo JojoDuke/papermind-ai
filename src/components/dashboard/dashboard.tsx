@@ -292,7 +292,7 @@ const Dashboard = () => {
 
   // Render the document workspace with writing area and PDF preview
   const renderDocumentWorkspace = () => (
-    <div className="w-11/12 h-5/6 bg-white border border-gray-200 rounded-xl shadow-md flex flex-row p-0 overflow-hidden document-workspace">
+    <div className="w-11/12 h-full bg-white border border-gray-200 rounded-xl shadow-md flex flex-row p-0 overflow-hidden document-workspace">
       {/* Left side - Writing area */}
       <div className="w-5/12 border-r border-gray-200 flex flex-col">
         <div className="p-6 flex-1 flex flex-col">
