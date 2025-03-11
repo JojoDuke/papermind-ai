@@ -13,5 +13,29 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storageKey: 'supabase.auth.token',
   }
-}) 
+})
+
+// Helper function to check if a user is authenticated
+export const isAuthenticated = async () => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession()
+    return !!session
+  } catch (error) {
+    console.error('Error checking authentication:', error)
+    return false
+  }
+}
+
+// Helper function to get the current user
+export const getCurrentUser = async () => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    return user
+  } catch (error) {
+    console.error('Error getting current user:', error)
+    return null
+  }
+} 

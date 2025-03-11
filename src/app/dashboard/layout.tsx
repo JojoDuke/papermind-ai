@@ -10,45 +10,64 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
+    console.log('Dashboard layout mounted');
+    
     // Check if user is authenticated
     const checkAuth = async () => {
       try {
-        const { data } = await supabase.auth.getSession();
+        console.log('Dashboard: Checking authentication...');
+        const { data: { session } } = await supabase.auth.getSession();
         
-        if (!data.session) {
-          // Not authenticated, redirect to signin
+        if (!session) {
+          console.log('Dashboard: No session found, redirecting to signin');
           window.location.href = '/signin';
           return;
         }
         
-        // User is authenticated, show content
+        console.log('Dashboard: User authenticated, showing content');
+        setIsAuthenticated(true);
         setIsLoading(false);
+        
+        // Replace current history entry with the dashboard page
+        // This ensures clicking back will go to the homepage
+        window.history.replaceState(null, '', '/dashboard');
       } catch (error) {
-        console.error('Error checking authentication:', error);
-        // Error checking auth, redirect to signin
+        console.error('Dashboard: Error checking authentication:', error);
         window.location.href = '/signin';
       }
     };
-
+    
     checkAuth();
-  }, []);
-
-  // Clear browser history on dashboard load
-  useEffect(() => {
-    // Replace current history entry with the dashboard page
-    // This ensures clicking back will go to the homepage
-    window.history.replaceState(null, '', '/dashboard');
+    
+    // Set up auth state change listener
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Dashboard: Auth state changed:', event, session ? 'Session exists' : 'No session');
+      
+      if (event === 'SIGNED_OUT') {
+        window.location.href = '/signin';
+      }
+    });
+    
+    // Clean up subscription when component unmounts
+    return () => {
+      if (subscription) {
+        subscription.unsubscribe();
+      }
+    };
   }, []);
 
   if (isLoading) {
     return <Loading />;
   }
 
-  return (
+  return isAuthenticated ? (
     <div className="min-h-screen bg-gray-50">
       {children}
     </div>
-  );
+  ) : null;
 } 

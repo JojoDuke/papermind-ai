@@ -6,10 +6,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function SignInPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirectTo') || '/dashboard';
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -38,6 +41,7 @@ export default function SignInPage() {
     setError(null);
     
     try {
+      console.log('Attempting to sign in...');
       // Sign in with Supabase Auth
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
@@ -46,11 +50,13 @@ export default function SignInPage() {
       
       if (signInError) throw signInError;
       
+      console.log('Sign-in successful, session:', data.session ? 'exists' : 'does not exist');
+      console.log('Redirecting to:', redirectTo);
+      
       // Ensure session is established before redirecting
       if (data.session) {
-        // Use window.location.replace to replace the current history entry
-        // This prevents the signin page from being in the history stack
-        window.location.replace('/dashboard');
+        // Force a full page reload to ensure the session is properly recognized
+        window.location.href = redirectTo;
       } else {
         throw new Error("Failed to establish session");
       }
@@ -180,7 +186,7 @@ export default function SignInPage() {
               const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                  redirectTo: `${window.location.origin}/auth/callback`
+                  redirectTo: `${window.location.origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`
                 }
               });
               
