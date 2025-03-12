@@ -9,6 +9,10 @@ import { Toaster } from "@/components/ui/toaster";
 import "react-loading-skeleton/dist/skeleton.css";
 import "simplebar-react/dist/simplebar.min.css";
 
+import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
+import { extractRouterConfig } from "uploadthing/server";
+import { ourFileRouter } from "@/app/api/uploadthing/core";
+
 const jakarta = Plus_Jakarta_Sans({ 
   subsets: ["latin"],
   variable: "--font-jakarta",
@@ -30,6 +34,9 @@ export default function RootLayout({
         <Providers>
           <div className="min-h-screen flex flex-col">
             <Toaster />
+            <NextSSRPlugin
+              routerConfig={extractRouterConfig(ourFileRouter)}
+            />
             {children}
           </div>
         </Providers>
