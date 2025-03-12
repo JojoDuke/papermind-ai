@@ -1,4 +1,6 @@
 import { createUploadthing, type FileRouter } from "uploadthing/next";
+import { cookies } from "next/headers";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 
 // Create a new instance of UploadThing
 const f = createUploadthing();
@@ -8,20 +10,51 @@ export const ourFileRouter = {
   // Define as many FileRoutes as you like, each with a unique routeSlug
   pdfUploader: f({
     pdf: {
-      maxFileSize: "4MB",
+      maxFileSize: "32MB",
       maxFileCount: 1
     },
   })
-    .middleware(async () => {
-      // For testing purposes, we'll allow uploads without authentication
-      return { userId: "test-user" };
+    .middleware(async ({ req }) => {
+      const supabase = createServerComponentClient({ cookies });
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session?.user) {
+        throw new Error("Unauthorized");
+      }
+
+      // Return metadata that will be accessible in onUploadComplete
+      return {
+        userId: session.user.id,
+        uploadedAt: new Date().toISOString()
+      };
     })
     .onUploadComplete(async ({ metadata, file }) => {
       try {
-        console.log("Upload complete for userId:", metadata.userId);
-        console.log("File URL:", file.url);
+        const supabase = createServerComponentClient({ cookies });
+        
+        // Insert the file record into the database
+        const { data, error } = await supabase
+          .from('files')
+          .insert([
+            {
+              user_id: metadata.userId,
+              name: file.name,
+              size: file.size,
+              url: file.url,
+              uploaded_at: metadata.uploadedAt,
+              type: 'pdf'
+            }
+          ])
+          .select()
+          .single();
 
-        return { fileUrl: file.url };
+        if (error) {
+          console.error("Database error:", error);
+          throw new Error("Failed to save file record");
+        }
+
+        console.log("File record created:", data);
+        return { fileId: data.id, fileUrl: file.url };
       } catch (err) {
         console.error("Upload completion error:", err);
         throw new Error("Failed to process upload");
