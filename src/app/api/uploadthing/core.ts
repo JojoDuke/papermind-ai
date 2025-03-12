@@ -1,30 +1,36 @@
 import { createUploadthing, type FileRouter } from "uploadthing/next";
+import { getToken } from "@/lib/auth";
 
 // Create a new instance of UploadThing
 const f = createUploadthing();
 
-// Define the file router
+// FileRouter for your app, can contain multiple FileRoutes
 export const ourFileRouter = {
-  // Define a route for PDF uploads
+  // Define as many FileRoutes as you like, each with a unique routeSlug
   pdfUploader: f({ pdf: { maxFileSize: "4MB" } })
-    .middleware(() => {
-      // No authentication or database operations in middleware
-      console.log("[UploadThing] Middleware called");
-      return { userId: "test-user" };
+    .middleware(async () => {
+      // This code runs on your server before upload
+      const user = await getToken();
+
+      // If you throw, the user will not be able to upload
+      if (!user) throw new Error("Unauthorized");
+
+      // Whatever is returned here is accessible in onUploadComplete as `metadata`
+      return { userId: user.id };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      // Log the file details but don't interact with the database
-      console.log("[UploadThing] Upload complete:", {
-        userId: metadata.userId,
-        fileName: file.name,
-        fileSize: file.size,
-        fileKey: file.key,
-        fileUrl: file.url
+      // This code RUNS ON YOUR SERVER after upload
+      console.log("Upload complete for userId:", metadata.userId);
+      console.log("File details:", {
+        name: file.name,
+        size: file.size,
+        key: file.key,
+        url: file.url
       });
-      
-      // Return success without database operations
-      return { success: true };
+
+      // Return response to client
+      return { fileUrl: file.url };
     }),
-};
+} satisfies FileRouter;
 
 export type OurFileRouter = typeof ourFileRouter;
