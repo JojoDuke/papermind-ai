@@ -42,8 +42,14 @@ const Dashboard = () => {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [currentFile, setCurrentFile] = useState<UploadedFile | null>(null);
   const [hasUploadedFile, setHasUploadedFile] = useState<boolean>(false);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [isUploading, setIsUploading] = useState(false);
 
   const { startUpload } = useUploadThing("pdfUploader", {
+    onUploadProgress: (progress) => {
+      console.log("Upload progress:", progress);
+      setUploadProgress(progress);
+    },
     onClientUploadComplete: (res: any[]) => {
       if (res && res[0]) {
         console.log("Upload completed:", res);
@@ -54,6 +60,8 @@ const Dashboard = () => {
         };
         setCurrentFile(newFile);
         setHasUploadedFile(true);
+        setIsUploading(false);
+        setUploadProgress(0);
         
         toast({
           title: "File uploaded successfully",
@@ -64,6 +72,8 @@ const Dashboard = () => {
     },
     onUploadError: (error: Error) => {
       console.error("Upload error:", error);
+      setIsUploading(false);
+      setUploadProgress(0);
       toast({
         title: "Upload error",
         description: error.message || "An unknown error occurred",
@@ -123,9 +133,12 @@ const Dashboard = () => {
         onDrop={async (acceptedFiles) => {
           console.log("Files dropped:", acceptedFiles);
           try {
+            setIsUploading(true);
             await startUpload(acceptedFiles);
           } catch (err) {
             console.error("Upload error:", err);
+            setIsUploading(false);
+            setUploadProgress(0);
             toast({
               title: "Upload error",
               description: "Failed to start upload",
@@ -144,16 +157,31 @@ const Dashboard = () => {
             <input {...getInputProps()} />
             <div className="flex flex-col items-center justify-center">
               <div className="p-4 rounded-full bg-purple-100 mb-4">
-                <Upload className="h-10 w-10 text-purple-500" />
+                {isUploading ? (
+                  <Loader2 className="h-10 w-10 text-purple-500 animate-spin" />
+                ) : (
+                  <Upload className="h-10 w-10 text-purple-500" />
+                )}
               </div>
-              <h2 className="text-2xl font-semibold text-gray-800 mb-3">Upload Your Documents</h2>
-              <p className="text-gray-600 text-center max-w-md mb-4">
-                {isDragActive ? "Drop your PDF here" : "Click to browse or drag and drop your PDF"}
-              </p>
-              <div className="flex items-center space-x-2 text-sm text-gray-500">
-                <FileText className="h-4 w-4" />
-                <span>Maximum file size: 4MB</span>
-              </div>
+              <h2 className="text-2xl font-semibold text-gray-800 mb-3">
+                {isUploading ? "Uploading..." : "Upload Your Documents"}
+              </h2>
+              {isUploading ? (
+                <div className="w-full max-w-xs space-y-2">
+                  <Progress value={uploadProgress} className="h-2" />
+                  <p className="text-sm text-gray-500 text-center">{Math.round(uploadProgress)}%</p>
+                </div>
+              ) : (
+                <>
+                  <p className="text-gray-600 text-center max-w-md mb-4">
+                    {isDragActive ? "Drop your PDF here" : "Click to browse or drag and drop your PDF"}
+                  </p>
+                  <div className="flex items-center space-x-2 text-sm text-gray-500">
+                    <FileText className="h-4 w-4" />
+                    <span>Maximum file size: 4MB</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}
