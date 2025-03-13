@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, Loader2, PanelLeftClose, PanelLeftOpen, Upload, FileText, AlertCircle } from "lucide-react";
+import { LogOut, Loader2, PanelLeftClose, PanelLeftOpen, Upload, FileText, AlertCircle, Plus } from "lucide-react";
 import { useState, useEffect, Suspense } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
@@ -31,8 +31,11 @@ const PdfRenderer = dynamic(() => import('./pdf-renderer'), {
 // Define a type for uploaded files
 interface UploadedFile {
   id: string;
+  user_id?: string;
   name: string;
   url: string;
+  created_at?: string;
+  file_size?: number;
 }
 
 const Dashboard = () => {
@@ -44,30 +47,92 @@ const Dashboard = () => {
   const [hasUploadedFile, setHasUploadedFile] = useState<boolean>(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [userFiles, setUserFiles] = useState<UploadedFile[]>([]);
+  const [isLoadingFiles, setIsLoadingFiles] = useState(true);
+
+  // Load user's files on component mount
+  useEffect(() => {
+    const loadUserFiles = async () => {
+      try {
+        const { data: files, error } = await supabase
+          .from('files')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        
+        setUserFiles(files || []);
+        // If we have files and no current file is selected, select the most recent one
+        if (files?.length > 0 && !currentFile) {
+          setCurrentFile(files[0]);
+          setHasUploadedFile(true);
+        }
+      } catch (error) {
+        console.error('Error loading files:', error);
+        toast({
+          title: "Error loading files",
+          description: "Failed to load your documents. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoadingFiles(false);
+      }
+    };
+
+    loadUserFiles();
+  }, []);
 
   const { startUpload } = useUploadThing("pdfUploader", {
     onUploadProgress: (progress) => {
       console.log("Upload progress:", progress);
       setUploadProgress(progress);
     },
-    onClientUploadComplete: (res: any[]) => {
+    onClientUploadComplete: async (res: any[]) => {
       if (res && res[0]) {
         console.log("Upload completed:", res);
-        const newFile = {
-          id: res[0].key,
-          name: res[0].name,
-          url: res[0].url
-        };
-        setCurrentFile(newFile);
-        setHasUploadedFile(true);
-        setIsUploading(false);
-        setUploadProgress(0);
-        
-        toast({
-          title: "File uploaded successfully",
-          description: `${res[0].name} has been uploaded.`,
-          variant: "default",
-        });
+
+        try {
+          // Get the current user's ID
+          const { data: { user }, error: userError } = await supabase.auth.getUser();
+          
+          if (userError) throw userError;
+          if (!user) throw new Error('No user found');
+
+          const newFile = {
+            id: res[0].key,
+            user_id: user.id,  // Add the user_id
+            name: res[0].name,
+            url: res[0].url,
+            created_at: new Date().toISOString(),
+            file_size: res[0].size
+          };
+
+          // Save file info to Supabase
+          const { error } = await supabase
+            .from('files')
+            .insert([newFile]);
+
+          if (error) throw error;
+
+          setUserFiles(prev => [newFile, ...prev]);
+          setCurrentFile(newFile);
+          setHasUploadedFile(true);
+          setIsUploading(false);
+          setUploadProgress(0);
+          
+          toast({
+            title: "File uploaded successfully",
+            description: `${res[0].name} has been uploaded.`,
+            variant: "default",
+          });
+        } catch (error) {
+          console.error('Error saving file:', error);
+          toast({
+            title: "Error saving file",
+            description: "File uploaded but failed to save. Please try again.",
+            variant: "destructive",
+          });
+        }
       }
     },
     onUploadError: (error: Error) => {
@@ -125,6 +190,29 @@ const Dashboard = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isSidebarCollapsed]);
+
+  // Function to format file size
+  const formatFileSize = (bytes?: number) => {
+    if (!bytes) return 'Unknown size';
+    const units = ['B', 'KB', 'MB', 'GB'];
+    let size = bytes;
+    let unitIndex = 0;
+    while (size >= 1024 && unitIndex < units.length - 1) {
+      size /= 1024;
+      unitIndex++;
+    }
+    return `${size.toFixed(1)} ${units[unitIndex]}`;
+  };
+
+  // Function to format date
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
 
   // Render the upload area when no file has been uploaded
   const renderUploadArea = () => (
@@ -287,7 +375,7 @@ const Dashboard = () => {
         }`}
       >
         {/* Sidebar Header with Toggle Button */}
-        <div className={`p-4 border-b border-gray-200 flex ${isSidebarCollapsed ? 'justify-center' : 'justify-start'}`}>
+        <div className={`p-4 border-b border-gray-200 flex ${isSidebarCollapsed ? 'justify-center' : 'justify-between items-center'}`}>
           <Tooltip 
             content={isSidebarCollapsed ? "Open sidebar" : "Close sidebar"}
             side={isSidebarCollapsed ? "right" : "bottom"}
@@ -301,13 +389,77 @@ const Dashboard = () => {
               {isSidebarCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
             </Button>
           </Tooltip>
+          
+          {!isSidebarCollapsed && (
+            <Tooltip content="New Document" side="bottom">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="p-1 hover:bg-gray-100"
+                onClick={() => {
+                  setCurrentFile(null);
+                  setHasUploadedFile(false);
+                }}
+              >
+                <Plus className="h-5 w-5" />
+              </Button>
+            </Tooltip>
+          )}
         </div>
         
         {/* Navigation Links */}
         <div className="flex-1 overflow-y-auto py-4 px-3">
-          <ul className="space-y-2">
-            {/* Add navigation items here later */}
-          </ul>
+          <div className={`mb-4 ${isSidebarCollapsed ? 'hidden' : 'block'}`}>
+            <h3 className="px-2 text-sm font-semibold text-gray-500 uppercase tracking-wider">
+              Your Documents
+            </h3>
+          </div>
+          {isLoadingFiles ? (
+            <div className="flex justify-center py-4">
+              <Loader2 className="h-6 w-6 animate-spin text-purple-500" />
+            </div>
+          ) : (
+            <ul className="space-y-2">
+              {userFiles.map((file) => (
+                <li key={file.id}>
+                  <button
+                    onClick={() => {
+                      setCurrentFile(file);
+                      setHasUploadedFile(true);
+                      if (!isSidebarCollapsed) setIsSidebarCollapsed(true);
+                    }}
+                    className={`w-full text-left ${
+                      isSidebarCollapsed 
+                        ? 'p-2 flex justify-center' 
+                        : 'p-3 hover:bg-gray-100'
+                    } rounded-lg transition-colors ${
+                      currentFile?.id === file.id ? 'bg-purple-100 text-purple-900' : 'text-gray-700'
+                    }`}
+                  >
+                    {isSidebarCollapsed ? (
+                      <FileText className={`h-5 w-5 ${
+                        currentFile?.id === file.id ? 'text-purple-600' : 'text-gray-500'
+                      }`} />
+                    ) : (
+                      <div className="flex flex-col">
+                        <div className="flex items-center">
+                          <FileText className="h-4 w-4 mr-2 text-gray-500" />
+                          <span className="text-sm font-medium truncate">
+                            {file.name}
+                          </span>
+                        </div>
+                        <div className="mt-1 flex items-center text-xs text-gray-500">
+                          <span>{formatDate(file.created_at)}</span>
+                          <span className="mx-1">•</span>
+                          <span>{formatFileSize(file.file_size)}</span>
+                        </div>
+                      </div>
+                    )}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         
         {/* Logout Button at bottom of sidebar */}
