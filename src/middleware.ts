@@ -10,7 +10,7 @@ const publicRoutes = ['/signin', '/signup', '/auth/callback'];
 export async function middleware(req: NextRequest) {
   // Skip middleware in development to simplify debugging
   if (process.env.NODE_ENV === 'development') {
-    console.log('Middleware: Skipping in development mode');
+    //console.log('Middleware: Skipping in development mode');
     return NextResponse.next();
   }
 

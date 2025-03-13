@@ -13,6 +13,7 @@ import { Progress } from "../ui/progress";
 import { File, Cloud } from "lucide-react";
 import dynamic from 'next/dynamic';
 import ChatInterface from './chat-interface';
+import { UploadDropzone } from "@/utils/uploadthing";
 
 // Dynamically import the PDF renderer with no SSR
 const PdfRenderer = dynamic(() => import('./pdf-renderer'), { 
@@ -35,46 +36,11 @@ const Dashboard = () => {
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
-  const [isUploadHovered, setIsUploadHovered] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [isUploading, setIsUploading] = useState<boolean>(false);
-  const [uploadProgress, setUploadProgress] = useState<number>(0);
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [currentFile, setCurrentFile] = useState<UploadedFile | null>(null);
   const [hasUploadedFile, setHasUploadedFile] = useState<boolean>(false);
 
   const { toast } = useToast();
-  
-  // Load uploaded files on component mount
-  useEffect(() => {
-    const fetchUploadedFiles = async () => {
-      try {
-        const response = await fetch('/api/files');
-        if (response.ok) {
-          const data = await response.json();
-          if (data.files && Array.isArray(data.files)) {
-            // Transform the files to match our expected format
-            const files = data.files.map((file: any) => ({
-              id: file.key,
-              name: file.name,
-              url: file.url
-            }));
-            setUploadedFiles(files);
-            
-            // If there are files, set the most recent one as current
-            if (files.length > 0) {
-              setCurrentFile(files[0]);
-              setHasUploadedFile(true);
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching files:', error);
-      }
-    };
-    
-    fetchUploadedFiles();
-  }, []);
 
   const handleLogoutClick = () => {
     setShowLogoutConfirm(true);
@@ -101,71 +67,6 @@ const Dashboard = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
   };
 
-  const startSimulatedProgress = () => {
-    setUploadProgress(0);
-
-    const interval = setInterval(() => {
-      setUploadProgress((prevProgress) => {
-        if (prevProgress >= 95) {
-          clearInterval(interval);
-          return prevProgress;
-        }
-        return prevProgress + 5;
-      });
-    }, 500);
-    return interval;
-  };
-
-  // Function to handle file upload using our local API
-  const handleFileUpload = async (file: File) => {
-    try {
-      // Create form data
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      // Log file details
-      console.log("Uploading file:", file.name);
-      
-      // Send the file to our local API
-      const response = await fetch('/api/local-upload', {
-        method: 'POST',
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Server responded with ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log("Upload response:", data);
-      
-      if (data.success && data.file) {
-        // Create a new file object
-        const newFile: UploadedFile = {
-          id: data.file.key,
-          name: data.file.name,
-          url: data.file.url
-        };
-        
-        // Update state
-        setUploadedFiles(prev => [newFile, ...prev]);
-        setCurrentFile(newFile);
-        setHasUploadedFile(true);
-        
-        return {
-          success: true,
-          file: data.file
-        };
-      } else {
-        throw new Error("Upload failed: Unexpected response format");
-      }
-    } catch (error) {
-      console.error("Upload error:", error);
-      throw error;
-    }
-  };
-
   // Close sidebar when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -187,107 +88,44 @@ const Dashboard = () => {
   // Render the upload area when no file has been uploaded
   const renderUploadArea = () => (
     <div className="w-3/4 h-3/4 bg-white border border-gray-200 rounded-xl shadow-md flex flex-col items-center justify-center p-8">
-      <Dropzone
-        multiple={false}
-        onDrop={async (acceptedFile) => {
-          if (acceptedFile.length === 0) return;
-          
-          setIsUploading(true);
-          const progressInterval = startSimulatedProgress();
-
-          try {
-            // Log file details
-            console.log("Starting upload for file:", acceptedFile[0].name);
+      <UploadDropzone
+        endpoint="pdfUploader"
+        onClientUploadComplete={(res) => {
+          console.log("Upload completed:", res);
+          if (res && res[0]) {
+            const newFile = {
+              id: res[0].key,
+              name: res[0].name,
+              url: res[0].url
+            };
+            setCurrentFile(newFile);
+            setHasUploadedFile(true);
             
-            // Use our local upload function
-            const result = await handleFileUpload(acceptedFile[0]);
-            
-            if (result && result.success) {
-              clearInterval(progressInterval);
-              setUploadProgress(100);
-              console.log("Upload successful:", result.file);
-              
-              // Show success toast
-              toast({
-                title: "File uploaded successfully",
-                description: `${acceptedFile[0].name} has been uploaded.`,
-                variant: "default",
-              });
-              
-              // Reset upload state after a delay
-              setTimeout(() => {
-                setIsUploading(false);
-                setUploadProgress(0);
-              }, 2000);
-            } else {
-              throw new Error("Upload failed");
-            }
-          } catch (error) {
-            console.error("Upload error:", error);
-            setIsUploading(false);
-            clearInterval(progressInterval);
             toast({
-              title: "Upload error",
-              description: error instanceof Error ? error.message : "An unknown error occurred",
-              variant: "destructive",
+              title: "File uploaded successfully",
+              description: `${res[0].name} has been uploaded.`,
+              variant: "default",
             });
           }
         }}
-      >
-        {({ getRootProps, getInputProps, acceptedFiles }) => (
-          <div 
-            {...getRootProps()}
-            className="w-2/3 mx-auto h-64 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors"
-          >
-            <input {...getInputProps()} />
-            
-            <div className="flex flex-col items-center justify-center p-6">
-              <div className="p-4 rounded-full bg-purple-100 mb-4">
-                <Upload className="h-10 w-10 text-purple-500" />
-              </div>
-              <h2 className="text-2xl font-semibold text-gray-800 mb-3">Upload Your Documents</h2>
-              <p className="text-gray-600 text-center max-w-md mb-4">
-                Click to browse and upload files. Supported file types: PDF
-              </p>
-              <div className="flex items-center space-x-2 text-sm text-gray-500">
-                <FileText className="h-4 w-4" />
-                <span>Maximum file size: 4MB</span>
-              </div>
-              
-              {acceptedFiles && acceptedFiles[0] ? (
-                <div className="max-w-xs bg-white flex items-center rounded-md overflow-hidden outline outline-[1px] outline-zinc-200 divide-x divide-zinc-200 mt-4">
-                  <div className="px-3 py-2 h-full grid place-items-center">
-                    <File className="h-4 w-4 text-blue-500" />
-                  </div>
-                  <div className="px-3 py-2 h-full text-sm truncate">
-                    {acceptedFiles[0].name}
-                  </div>
-                </div>
-              ) : null}
-              
-              {isUploading && (
-                <div className="w-full mt-4 max-w-xs mx-auto">
-                  <Progress
-                    value={uploadProgress}
-                    className="h-1 w-full bg-zinc-200"
-                    indicatorColor={uploadProgress === 100 ? "bg-green-500" : ""}
-                  />
-                  {uploadProgress === 100 ? (
-                    <div className="flex gap-1 items-center justify-center text-sm text-zinc-700 text-center pt-2">
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                      Processing...
-                    </div>
-                  ) : (
-                    <div className="text-xs text-center text-zinc-500 pt-1">
-                      Uploading: {uploadProgress}%
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </Dropzone>
+        onUploadError={(error: Error) => {
+          console.error("Upload error:", error);
+          toast({
+            title: "Upload error",
+            description: error.message || "An unknown error occurred",
+            variant: "destructive",
+          });
+        }}
+        onUploadBegin={(fileName: string) => {
+          console.log("Upload starting:", fileName);
+        }}
+        appearance={{
+          container: "w-2/3 h-64",
+          label: "text-2xl font-semibold text-gray-800",
+          allowedContent: "text-gray-600 text-center max-w-md",
+          button: "bg-purple-500 hover:bg-purple-600"
+        }}
+      />
     </div>
   );
 
