@@ -13,7 +13,10 @@ import { Progress } from "../ui/progress";
 import { File, Cloud } from "lucide-react";
 import dynamic from 'next/dynamic';
 import ChatInterface from './chat-interface';
-import { UploadDropzone } from "@/utils/uploadthing";
+import { generateReactHelpers } from "@uploadthing/react";
+import type { OurFileRouter } from "@/app/api/uploadthing/core";
+
+const { useUploadThing } = generateReactHelpers<OurFileRouter>();
 
 // Dynamically import the PDF renderer with no SSR
 const PdfRenderer = dynamic(() => import('./pdf-renderer'), { 
@@ -40,6 +43,34 @@ const Dashboard = () => {
   const [currentFile, setCurrentFile] = useState<UploadedFile | null>(null);
   const [hasUploadedFile, setHasUploadedFile] = useState<boolean>(false);
 
+  const { startUpload } = useUploadThing("pdfUploader", {
+    onClientUploadComplete: (res: any[]) => {
+      if (res && res[0]) {
+        console.log("Upload completed:", res);
+        const newFile = {
+          id: res[0].key,
+          name: res[0].name,
+          url: res[0].url
+        };
+        setCurrentFile(newFile);
+        setHasUploadedFile(true);
+        
+        toast({
+          title: "File uploaded successfully",
+          description: `${res[0].name} has been uploaded.`,
+          variant: "default",
+        });
+      }
+    },
+    onUploadError: (error: Error) => {
+      console.error("Upload error:", error);
+      toast({
+        title: "Upload error",
+        description: error.message || "An unknown error occurred",
+        variant: "destructive",
+      });
+    }
+  });
   const { toast } = useToast();
 
   const handleLogoutClick = () => {
@@ -88,44 +119,45 @@ const Dashboard = () => {
   // Render the upload area when no file has been uploaded
   const renderUploadArea = () => (
     <div className="w-3/4 h-3/4 bg-white border border-gray-200 rounded-xl shadow-md flex flex-col items-center justify-center p-8">
-      <UploadDropzone
-        endpoint="pdfUploader"
-        onClientUploadComplete={(res) => {
-          console.log("Upload completed:", res);
-          if (res && res[0]) {
-            const newFile = {
-              id: res[0].key,
-              name: res[0].name,
-              url: res[0].url
-            };
-            setCurrentFile(newFile);
-            setHasUploadedFile(true);
-            
+      <Dropzone
+        onDrop={async (acceptedFiles) => {
+          console.log("Files dropped:", acceptedFiles);
+          try {
+            await startUpload(acceptedFiles);
+          } catch (err) {
+            console.error("Upload error:", err);
             toast({
-              title: "File uploaded successfully",
-              description: `${res[0].name} has been uploaded.`,
-              variant: "default",
+              title: "Upload error",
+              description: "Failed to start upload",
+              variant: "destructive",
             });
           }
         }}
-        onUploadError={(error: Error) => {
-          console.error("Upload error:", error);
-          toast({
-            title: "Upload error",
-            description: error.message || "An unknown error occurred",
-            variant: "destructive",
-          });
-        }}
-        onUploadBegin={(fileName: string) => {
-          console.log("Upload starting:", fileName);
-        }}
-        appearance={{
-          container: "w-2/3 h-64",
-          label: "text-2xl font-semibold text-gray-800",
-          allowedContent: "text-gray-600 text-center max-w-md",
-          button: "bg-purple-500 hover:bg-purple-600"
-        }}
-      />
+        accept={{ "application/pdf": [".pdf"] }}
+        maxSize={4 * 1024 * 1024} // 4MB
+      >
+        {({getRootProps, getInputProps, isDragActive}) => (
+          <div 
+            {...getRootProps()} 
+            className="w-2/3 mx-auto h-64 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer flex flex-col items-center justify-center"
+          >
+            <input {...getInputProps()} />
+            <div className="flex flex-col items-center justify-center">
+              <div className="p-4 rounded-full bg-purple-100 mb-4">
+                <Upload className="h-10 w-10 text-purple-500" />
+              </div>
+              <h2 className="text-2xl font-semibold text-gray-800 mb-3">Upload Your Documents</h2>
+              <p className="text-gray-600 text-center max-w-md mb-4">
+                {isDragActive ? "Drop your PDF here" : "Click to browse or drag and drop your PDF"}
+              </p>
+              <div className="flex items-center space-x-2 text-sm text-gray-500">
+                <FileText className="h-4 w-4" />
+                <span>Maximum file size: 4MB</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </Dropzone>
     </div>
   );
 
