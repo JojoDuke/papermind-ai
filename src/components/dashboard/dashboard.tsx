@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, Loader2, PanelLeftClose, PanelLeftOpen, Upload, FileText, AlertCircle, Plus } from "lucide-react";
+import { LogOut, Loader2, PanelLeftClose, PanelLeftOpen, Upload, FileText, AlertCircle, Plus, MoreVertical, Trash } from "lucide-react";
 import { useState, useEffect, Suspense } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
@@ -15,6 +15,12 @@ import dynamic from 'next/dynamic';
 import ChatInterface from './chat-interface';
 import { generateReactHelpers } from "@uploadthing/react";
 import type { OurFileRouter } from "@/app/api/uploadthing/core";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const { useUploadThing } = generateReactHelpers<OurFileRouter>();
 
@@ -307,6 +313,49 @@ const Dashboard = () => {
     </div>
   );
 
+  const handleDeleteFile = async (file: UploadedFile) => {
+    try {
+      // Delete from Supabase
+      const { error: dbError } = await supabase
+        .from('files')
+        .delete()
+        .eq('id', file.id);
+
+      if (dbError) throw dbError;
+
+      // Delete from UploadThing
+      const response = await fetch(`/api/uploadthing/delete?key=${file.id}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete file from UploadThing');
+      }
+
+      // Update UI
+      setUserFiles(prev => prev.filter(f => f.id !== file.id));
+      
+      // If the deleted file was the current file, clear it
+      if (currentFile?.id === file.id) {
+        setCurrentFile(null);
+        setHasUploadedFile(false);
+      }
+
+      toast({
+        title: "File deleted",
+        description: `${file.name} has been deleted.`,
+        variant: "default",
+      });
+    } catch (error) {
+      console.error('Error deleting file:', error);
+      toast({
+        title: "Error deleting file",
+        description: "Failed to delete the file. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="relative h-screen bg-gradient-to-br from-white via-purple-100 to-indigo-200 overflow-hidden">
       {/* Gradient overlay elements */}
@@ -422,40 +471,74 @@ const Dashboard = () => {
             <ul className="space-y-2">
               {userFiles.map((file) => (
                 <li key={file.id}>
-                  <button
-                    onClick={() => {
-                      setCurrentFile(file);
-                      setHasUploadedFile(true);
-                      if (!isSidebarCollapsed) setIsSidebarCollapsed(true);
-                    }}
-                    className={`w-full text-left ${
-                      isSidebarCollapsed 
-                        ? 'p-2 flex justify-center' 
-                        : 'p-3 hover:bg-gray-100'
-                    } rounded-lg transition-colors ${
-                      currentFile?.id === file.id ? 'bg-purple-100 text-purple-900' : 'text-gray-700'
-                    }`}
-                  >
-                    {isSidebarCollapsed ? (
-                      <FileText className={`h-5 w-5 ${
-                        currentFile?.id === file.id ? 'text-purple-600' : 'text-gray-500'
-                      }`} />
-                    ) : (
-                      <div className="flex flex-col">
-                        <div className="flex items-center">
-                          <FileText className="h-4 w-4 mr-2 text-gray-500" />
-                          <span className="text-sm font-medium truncate">
-                            {file.name}
-                          </span>
+                  <div className="flex items-center">
+                    <button
+                      onClick={() => {
+                        setCurrentFile(file);
+                        setHasUploadedFile(true);
+                        if (!isSidebarCollapsed) setIsSidebarCollapsed(true);
+                      }}
+                      className={`flex-1 text-left ${
+                        isSidebarCollapsed 
+                          ? 'p-2 flex justify-center' 
+                          : 'p-3 hover:bg-gray-100'
+                      } rounded-lg transition-colors ${
+                        currentFile?.id === file.id ? 'bg-purple-100 text-purple-900' : 'text-gray-700'
+                      }`}
+                    >
+                      {isSidebarCollapsed ? (
+                        <FileText className={`h-5 w-5 ${
+                          currentFile?.id === file.id ? 'text-purple-600' : 'text-gray-500'
+                        }`} />
+                      ) : (
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex flex-col">
+                            <div className="flex items-center">
+                              <FileText className="h-4 w-4 mr-2 text-gray-500" />
+                              <span className="text-sm font-medium truncate">
+                                {file.name}
+                              </span>
+                            </div>
+                            <div className="mt-1 flex items-center text-xs text-gray-500">
+                              <span>{formatDate(file.created_at)}</span>
+                              <span className="mx-1">•</span>
+                              <span>{formatFileSize(file.file_size)}</span>
+                            </div>
+                          </div>
+                          {!isSidebarCollapsed && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0 hover:bg-transparent"
+                                >
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-[160px]">
+                                <DropdownMenuItem>
+                                  Share
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  Rename
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  Archive
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleDeleteFile(file)}
+                                  className="text-red-600 focus:text-red-600"
+                                >
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
                         </div>
-                        <div className="mt-1 flex items-center text-xs text-gray-500">
-                          <span>{formatDate(file.created_at)}</span>
-                          <span className="mx-1">•</span>
-                          <span>{formatFileSize(file.file_size)}</span>
-                        </div>
-                      </div>
-                    )}
-                  </button>
+                      )}
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
