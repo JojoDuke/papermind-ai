@@ -1,5 +1,7 @@
 "use client";
 
+console.log('Dashboard component loaded - Version 1.0');
+
 import { LogOut, Loader2, PanelLeftClose, PanelLeftOpen, Upload, FileText, AlertCircle, Plus, MoreVertical, Trash } from "lucide-react";
 import { useState, useEffect, Suspense } from "react";
 import { supabase } from "@/lib/supabase";
@@ -314,31 +316,38 @@ const Dashboard = () => {
   );
 
   const handleDeleteFile = async (file: UploadedFile) => {
+    console.log('Delete initiated for file:', file);
     try {
+      // Update UI first for better perceived performance
+      setUserFiles(prev => prev.filter(f => f.id !== file.id));
+      if (currentFile?.id === file.id) {
+        setCurrentFile(null);
+        setHasUploadedFile(false);
+      }
+
       // Delete from Supabase
-      const { error: dbError } = await supabase
+      console.log('Attempting to delete from Supabase...');
+      const { error: dbError, data } = await supabase
         .from('files')
         .delete()
-        .eq('id', file.id);
+        .eq('id', file.id)
+        .select();  // Add this to get deletion confirmation
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        console.error('Supabase delete error:', dbError);
+        throw dbError;
+      }
+      console.log('Supabase deletion response:', data);
 
-      // Delete from UploadThing
+      // Delete from UploadThing in parallel
+      console.log('Attempting to delete from UploadThing...');
       const response = await fetch(`/api/uploadthing/delete?key=${file.id}`, {
         method: 'DELETE'
       });
 
+      console.log('UploadThing response:', response);
       if (!response.ok) {
-        throw new Error('Failed to delete file from UploadThing');
-      }
-
-      // Update UI
-      setUserFiles(prev => prev.filter(f => f.id !== file.id));
-      
-      // If the deleted file was the current file, clear it
-      if (currentFile?.id === file.id) {
-        setCurrentFile(null);
-        setHasUploadedFile(false);
+        throw new Error(`Failed to delete file from UploadThing: ${response.status} ${response.statusText}`);
       }
 
       toast({
@@ -347,7 +356,19 @@ const Dashboard = () => {
         variant: "default",
       });
     } catch (error) {
-      console.error('Error deleting file:', error);
+      console.error('Delete operation failed:', error);
+      // Revert UI changes if deletion failed
+      const { data: files } = await supabase
+        .from('files')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      setUserFiles(files || []);
+      if (currentFile?.id === file.id) {
+        setCurrentFile(file);
+        setHasUploadedFile(true);
+      }
+
       toast({
         title: "Error deleting file",
         description: "Failed to delete the file. Please try again.",
@@ -472,72 +493,60 @@ const Dashboard = () => {
               {userFiles.map((file) => (
                 <li key={file.id}>
                   <div className="flex items-center">
-                    <button
-                      onClick={() => {
-                        setCurrentFile(file);
-                        setHasUploadedFile(true);
-                        if (!isSidebarCollapsed) setIsSidebarCollapsed(true);
-                      }}
-                      className={`flex-1 text-left ${
-                        isSidebarCollapsed 
-                          ? 'p-2 flex justify-center' 
-                          : 'p-3 hover:bg-gray-100'
-                      } rounded-lg transition-colors ${
-                        currentFile?.id === file.id ? 'bg-purple-100 text-purple-900' : 'text-gray-700'
-                      }`}
-                    >
-                      {isSidebarCollapsed ? (
+                    {isSidebarCollapsed ? (
+                      <button
+                        onClick={() => {
+                          setCurrentFile(file);
+                          setHasUploadedFile(true);
+                          if (!isSidebarCollapsed) setIsSidebarCollapsed(true);
+                        }}
+                        className="w-full p-2 flex justify-center hover:bg-gray-100 rounded-lg transition-colors"
+                      >
                         <FileText className={`h-5 w-5 ${
                           currentFile?.id === file.id ? 'text-purple-600' : 'text-gray-500'
                         }`} />
-                      ) : (
-                        <div className="flex items-center justify-between w-full">
-                          <div className="flex flex-col">
-                            <div className="flex items-center">
-                              <FileText className="h-4 w-4 mr-2 text-gray-500" />
-                              <span className="text-sm font-medium truncate">
-                                {file.name}
-                              </span>
-                            </div>
-                            <div className="mt-1 flex items-center text-xs text-gray-500">
-                              <span>{formatDate(file.created_at)}</span>
-                              <span className="mx-1">•</span>
-                              <span>{formatFileSize(file.file_size)}</span>
-                            </div>
+                      </button>
+                    ) : (
+                      <div className={`flex items-center w-full p-3 hover:bg-gray-100 rounded-lg transition-colors ${
+                        currentFile?.id === file.id ? 'bg-purple-100 text-purple-900' : 'text-gray-700'
+                      }`}>
+                        <div 
+                          className="flex-1 min-w-0 cursor-pointer"
+                          onClick={() => {
+                            setCurrentFile(file);
+                            setHasUploadedFile(true);
+                            if (!isSidebarCollapsed) setIsSidebarCollapsed(true);
+                          }}
+                        >
+                          <div className="flex items-center">
+                            <FileText className="h-4 w-4 flex-shrink-0 text-gray-500 mr-2" />
+                            <span className="text-sm font-medium truncate">
+                              {file.name}
+                            </span>
                           </div>
-                          {!isSidebarCollapsed && (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-6 w-6 p-0 hover:bg-transparent"
-                                >
-                                  <MoreVertical className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-[160px]">
-                                <DropdownMenuItem>
-                                  Share
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  Rename
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  Archive
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleDeleteFile(file)}
-                                  className="text-red-600 focus:text-red-600"
-                                >
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          )}
+                          <div className="flex items-center text-xs text-gray-500 mt-1">
+                            <span className="truncate">{formatDate(file.created_at)}</span>
+                            <span className="mx-1 flex-shrink-0">•</span>
+                            <span className="truncate">{formatFileSize(file.file_size)}</span>
+                          </div>
                         </div>
-                      )}
-                    </button>
+                        <div className="flex-shrink-0 ml-2">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 text-gray-500 hover:text-red-600"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              console.log('Delete button clicked for file:', file);
+                              handleDeleteFile(file);
+                            }}
+                          >
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </li>
               ))}
