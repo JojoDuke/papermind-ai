@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // Define which routes require authentication
-const protectedRoutes = ['/dashboard'];
+const protectedRoutes = ['/dashboard', '/dashboard/d'];
 // Define routes that should be accessible even when not authenticated
 const publicRoutes = ['/signin', '/signup', '/auth/callback'];
 

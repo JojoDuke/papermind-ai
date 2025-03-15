@@ -77,7 +77,11 @@ const LetterFadeIn = ({ text }: { text: string }) => {
   );
 };
 
-const ChatInterface = () => {
+interface ChatInterfaceProps {
+  fileId: string;
+}
+
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ fileId }) => {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
       id: '1',
