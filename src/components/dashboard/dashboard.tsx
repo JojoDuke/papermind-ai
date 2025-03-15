@@ -1,7 +1,5 @@
 "use client";
 
-console.log('Dashboard component loaded - Version 1.0');
-
 import { LogOut, Loader2, PanelLeftClose, PanelLeftOpen, Upload, FileText, AlertCircle, Plus, MoreVertical, Trash } from "lucide-react";
 import { useState, useEffect, Suspense } from "react";
 import { supabase } from "@/lib/supabase";
