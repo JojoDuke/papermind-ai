@@ -13,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useFiles } from "@/contexts/FileContext";
 
 // Define a type for uploaded files
 interface UploadedFile {
@@ -28,10 +29,10 @@ export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
+  const { userFiles, setUserFiles, removeFile } = useFiles();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [userFiles, setUserFiles] = useState<UploadedFile[]>([]);
   const [isLoadingFiles, setIsLoadingFiles] = useState(true);
 
   // Get current file ID from URL if we're on a document page
@@ -63,7 +64,7 @@ export default function Sidebar() {
     };
 
     loadUserFiles();
-  }, [toast]);
+  }, [toast, setUserFiles]);
 
   const handleLogoutClick = () => {
     setShowLogoutConfirm(true);
@@ -135,7 +136,7 @@ export default function Sidebar() {
     console.log('Delete initiated for file:', file);
     try {
       // Update UI first for better perceived performance
-      setUserFiles(prev => prev.filter(f => f.id !== file.id));
+      removeFile(file.id);
       
       // If we're deleting the current file, go back to dashboard
       if (currentFileId === file.id) {
@@ -315,31 +316,17 @@ export default function Sidebar() {
                             <span className="truncate">{formatFileSize(file.file_size)}</span>
                           </div>
                         </div>
-                        <div className="flex-shrink-0 ml-2">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                className="h-6 w-6 p-0 text-gray-500 hover:text-gray-900"
-                              >
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                className="text-red-600 cursor-pointer"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  handleDeleteFile(file);
-                                }}
-                              >
-                                <Trash className="h-4 w-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-gray-500 hover:text-red-600 hover:bg-red-50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteFile(file);
+                          }}
+                        >
+                          <Trash className="h-4 w-4" />
+                        </Button>
                       </div>
                     )}
                   </div>

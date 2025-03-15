@@ -20,6 +20,9 @@ interface DocumentWorkspaceProps {
 }
 
 const DocumentWorkspace = ({ fileUrl }: DocumentWorkspaceProps) => {
+  // Extract fileId from the URL
+  const fileId = fileUrl.split('/').pop()?.split('?')[0] || '';
+
   return (
     <div className="w-11/12 h-full bg-white border border-gray-200 rounded-xl shadow-md flex flex-row p-0 overflow-hidden document-workspace">
       {/* Left side - Chat area */}
@@ -27,7 +30,7 @@ const DocumentWorkspace = ({ fileUrl }: DocumentWorkspaceProps) => {
         <div className="flex flex-col h-full overflow-hidden">
           <h2 className="text-sm font-semibold text-gray-800 mb-2 text-center pt-4">Chat with Papermind</h2>
           <div className="flex-1 overflow-hidden">
-            <ChatInterface />
+            <ChatInterface fileId={fileId} />
           </div>
         </div>
       </div>

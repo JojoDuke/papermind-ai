@@ -9,12 +9,14 @@ import { useToast } from "../ui/use-toast";
 import { Progress } from "../ui/progress";
 import { generateReactHelpers } from "@uploadthing/react";
 import type { OurFileRouter } from "@/app/api/uploadthing/core";
+import { useFiles } from "@/contexts/FileContext";
 
 const { useUploadThing } = generateReactHelpers<OurFileRouter>();
 
 const Dashboard = () => {
   const router = useRouter();
   const { toast } = useToast();
+  const { addFile } = useFiles();
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadTimeout, setUploadTimeout] = useState<NodeJS.Timeout | null>(null);
@@ -63,6 +65,9 @@ const Dashboard = () => {
             .insert([newFile]);
 
           if (error) throw error;
+
+          // Add the new file to context
+          addFile(newFile);
 
           setIsUploading(false);
           setUploadProgress(0);

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Sidebar from "@/components/dashboard/sidebar";
+import { FileProvider } from "@/contexts/FileContext";
 
 export default function DashboardLayout({
   children,
@@ -47,9 +48,11 @@ export default function DashboardLayout({
   }, [router]);
 
   return (
-    <div className="relative h-screen">
-      <Sidebar />
-      {children}
-    </div>
+    <FileProvider>
+      <div className="relative h-screen">
+        <Sidebar />
+        {children}
+      </div>
+    </FileProvider>
   );
 } 
