@@ -7,8 +7,8 @@ headers = {
 
 data = {
       "collection_id": "6f5b8378-87eb-40a1-9fd3-cce05eb12515",
-      "request_query": "Are there any famous quotes from her?",
-      "model": "llama-3.3-70b"
+      "request_query": "how old was she",
+      "model": "gpt-4o-mini"
   }
 
 

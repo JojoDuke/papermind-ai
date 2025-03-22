@@ -154,7 +154,7 @@ const Dashboard = () => {
                     ) : (
                       <Upload className="h-10 w-10 text-purple-500" />
                     )}
-                  </div>
+            </div>
                   <h2 className="text-2xl font-semibold text-gray-800 mb-3">
                     {isUploading ? "Uploading..." : "Upload Your Documents"}
                   </h2>
@@ -162,7 +162,7 @@ const Dashboard = () => {
                     <div className="w-full max-w-xs space-y-2">
                       <Progress value={uploadProgress} className="h-2" />
                       <p className="text-sm text-gray-500 text-center">{Math.round(uploadProgress)}%</p>
-                    </div>
+          </div>
                   ) : (
                     <>
                       <p className="text-gray-600 text-center max-w-md mb-4">
@@ -171,10 +171,10 @@ const Dashboard = () => {
                       <div className="flex items-center space-x-2 text-sm text-gray-500">
                         <FileText className="h-4 w-4" />
                         <span>Maximum file size: 4MB</span>
-                      </div>
+        </div>
                     </>
                   )}
-                </div>
+        </div>
               </div>
             )}
           </Dropzone>

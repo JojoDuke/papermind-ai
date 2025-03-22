@@ -14,4 +14,4 @@ app.add_middleware(
 
 @app.get("/test")
 async def test_endpoint():
-    return {"message": "Hello from PaperMind AI!"} 
+    return {"message": "Need to know if this thing is actually functioning at all?"} 

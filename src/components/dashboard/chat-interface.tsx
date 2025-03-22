@@ -155,19 +155,34 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ fileId }) => {
     setInputMessage('');
     setIsProcessing(true);
     
-    // Simulate AI response (in a real app, this would call your AI backend)
-    setTimeout(() => {
+    try {
+      // Fetch response from our FastAPI endpoint
+      const response = await fetch('http://localhost:8000/test');
+      const data = await response.json();
+      
       const aiResponse: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        content: "I'm processing your document. This is a placeholder response that would be replaced with actual AI-generated content based on your document.",
+        content: data.message,
         isUser: false,
         timestamp: new Date(),
         isTyping: true
       };
       
       setChatMessages(prev => [...prev, aiResponse]);
+    } catch (error) {
+      console.error('Error fetching response:', error);
+      // Show error message in chat
+      const errorMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        content: "Sorry, I'm having trouble connecting to the AI service. Please check your internet connection and try again.",
+        isUser: false,
+        timestamp: new Date(),
+        isTyping: true
+      };
+      setChatMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsProcessing(false);
-    }, 1500);
+    }
   };
   
   // Handle input change
