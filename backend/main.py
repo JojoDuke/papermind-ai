@@ -32,7 +32,10 @@ class PDFUploadData(BaseModel):
 
 class ChatMessage(BaseModel):
     message: str
-    
+
+class DeleteCollection(BaseModel):
+    collection_id: str
+
 @app.post("/process-pdf")
 async def process_pdf(data: PDFUploadData):
     try:
@@ -102,4 +105,29 @@ async def test_endpoint(chat_message: ChatMessage):
         
     except Exception as e:
         print(f"Error calling Wetro API: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/delete-collection")
+async def delete_collection(data: DeleteCollection):
+    try:
+        # Delete collection from Wetro
+        delete_response = requests.delete(
+            "https://api.wetrocloud.com/v1/collection/delete/",
+            headers={
+                "Authorization": f"Token {WETRO_API_TOKEN}"
+            },
+            json={
+                "collection_id": data.collection_id
+            }
+        )
+        
+        if not delete_response.ok:
+            raise HTTPException(status_code=500, detail="Failed to delete collection")
+            
+        return {
+            "success": True,
+            "message": f"Collection {data.collection_id} deleted successfully"
+        }
+        
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) 

@@ -50,13 +50,33 @@ const Dashboard = () => {
           if (userError) throw userError;
           if (!user) throw new Error('No user found');
 
+          // Process PDF with Wetro
+          const wetroResponse = await fetch('http://localhost:8000/process-pdf', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              fileUrl: res[0].url,
+              fileName: res[0].name,
+              fileId: res[0].key
+            })
+          });
+
+          if (!wetroResponse.ok) {
+            throw new Error('Failed to process PDF with Wetro');
+          }
+
+          const { collection_id } = await wetroResponse.json();
+
           const newFile = {
             id: res[0].key,
             user_id: user.id,
             name: res[0].name,
             url: res[0].url,
             created_at: new Date().toISOString(),
-            file_size: res[0].size
+            file_size: res[0].size,
+            collection_id: collection_id  // Add the collection_id here
           };
 
           // Save file info to Supabase
@@ -77,12 +97,12 @@ const Dashboard = () => {
           
           toast({
             title: "File uploaded successfully",
-            description: `${res[0].name} has been uploaded.`,
+            description: `${res[0].name} has been uploaded and processed.`,
             variant: "default",
           });
         } catch (error) {
           console.error('Error saving file:', error);
-          handleUploadError(new Error('Failed to save file information'));
+          handleUploadError(error instanceof Error ? error : new Error('Failed to save file information'));
         }
       }
     },

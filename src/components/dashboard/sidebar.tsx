@@ -171,6 +171,26 @@ export default function Sidebar() {
         }
       }
 
+      // Delete from Wetro collection
+      try {
+        const collection_id = `pdf_${file.name.toLowerCase().replace(' ', '_').replace('.pdf', '')}`;
+        const response = await fetch('http://localhost:8000/delete-collection', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ collection_id })
+        });
+
+        if (!response.ok) {
+          console.error('Failed to delete Wetro collection:', await response.text());
+          throw new Error('Failed to delete Wetro collection');
+        }
+      } catch (error) {
+        console.error('Error deleting Wetro collection:', error);
+        // Continue with other deletions even if Wetro deletion fails
+      }
+
       // Delete from UploadThing with retries
       let uploadThingSuccess = false;
       retries = 3;
