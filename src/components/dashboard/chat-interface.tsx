@@ -57,23 +57,24 @@ const typingAnimation = `
 // Implement a faster letter-by-letter fade-in effect with proper spacing
 const LetterFadeIn = ({ text }: { text: string }) => {
   return (
-    <span>
-      {text.split('').map((char, index) => (
-        <span
-          key={index}
-          style={{
-            display: 'inline-block',
-            opacity: 0,
-            animation: `fadeIn 0.3s ease-in-out forwards`,
-            animationDelay: `${index * 0.03}s`,
-            whiteSpace: 'pre', // Preserve spaces
-            fontSize: '15px', // Set text size to 15px
-          }}
-        >
-          {char}
-        </span>
-      ))}
-    </span>
+    <div className="rounded-lg">
+      <div className="text-gray-800" style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+        {text.split('').map((char, index) => (
+          <span
+            key={index}
+            style={{
+              display: 'inline',
+              opacity: 0,
+              animation: `fadeIn 0.3s ease-in-out forwards`,
+              animationDelay: `${index * 0.01}s`,
+              fontSize: '15px'
+            }}
+          >
+            {char}
+          </span>
+        ))}
+      </div>
+    </div>
   );
 };
 
@@ -156,8 +157,19 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ fileId }) => {
     setIsProcessing(true);
     
     try {
-      // Fetch response from our FastAPI endpoint
-      const response = await fetch('http://localhost:8000/test');
+      // Send message to FastAPI endpoint
+      const response = await fetch('http://localhost:8000/test', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: inputMessage.trim() })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response');
+      }
+      
       const data = await response.json();
       
       const aiResponse: ChatMessage = {

@@ -1,11 +1,16 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 import requests
 import os
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
+
+# Define request model
+class ChatMessage(BaseModel):
+    message: str
 
 app = FastAPI()
 
@@ -23,8 +28,8 @@ WETRO_API_URL = "https://api.wetrocloud.com/v1/collection/query/"
 WETRO_API_TOKEN = os.getenv("WETRO_API_TOKEN")
 COLLECTION_ID = os.getenv("WETRO_COLLECTION_ID")
 
-@app.get("/test")
-async def test_endpoint():
+@app.post("/test")
+async def test_endpoint(chat_message: ChatMessage):
     try:
         # Prepare Wetro API request
         headers = {
@@ -33,12 +38,12 @@ async def test_endpoint():
         
         data = {
             "collection_id": COLLECTION_ID,
-            "request_query": "Whose her oldest child and their age",  # We'll make this dynamic later
+            "request_query": chat_message.message,  # Use the message from the frontend
             "model": "llama-3.3-70b"
         }
         
         # Make request to Wetro
-        response = requests.post(WETRO_API_URL, data=data, headers=headers)
+        response = requests.post(WETRO_API_URL, json=data, headers=headers)
         wetro_response = response.json()  
         
         # Extract the text response - adjust this based on Wetro's actual response structure
@@ -51,4 +56,4 @@ async def test_endpoint():
         
     except Exception as e:
         print(f"Error calling Wetro API: {str(e)}")
-        return {"message": f"Error: {str(e)}"} 
+        raise HTTPException(status_code=500, detail=str(e)) 
