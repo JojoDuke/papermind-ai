@@ -77,6 +77,7 @@ async def process_pdf(data: PDFUploadData):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+#Test Endpoint, to be deleted
 @app.post("/test")
 async def test_endpoint(chat_message: ChatMessage):
     try:
