@@ -80,9 +80,10 @@ const LetterFadeIn = ({ text }: { text: string }) => {
 
 interface ChatInterfaceProps {
   fileId: string;
+  fileName: string;
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ fileId }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ fileId, fileName }) => {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
       id: '1',
@@ -158,12 +159,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ fileId }) => {
     
     try {
       // Send message to FastAPI endpoint
-      const response = await fetch('http://localhost:8000/test', {
+      const response = await fetch('http://localhost:8000/query-collection', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message: inputMessage.trim() })
+        body: JSON.stringify({
+          message: inputMessage.trim(),
+          collection_id: `pdf_${fileName.toLowerCase().replace(/ /g, '_').replace('.pdf', '')}`
+        })
       });
 
       if (!response.ok) {

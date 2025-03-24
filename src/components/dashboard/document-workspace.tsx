@@ -17,9 +17,10 @@ const PdfRenderer = dynamic(() => import('./pdf-renderer'), {
 
 interface DocumentWorkspaceProps {
   fileUrl: string;
+  fileName: string;
 }
 
-const DocumentWorkspace = ({ fileUrl }: DocumentWorkspaceProps) => {
+const DocumentWorkspace = ({ fileUrl, fileName }: DocumentWorkspaceProps) => {
   // Extract fileId from the URL
   const fileId = fileUrl.split('/').pop()?.split('?')[0] || '';
 
@@ -30,7 +31,7 @@ const DocumentWorkspace = ({ fileUrl }: DocumentWorkspaceProps) => {
         <div className="flex flex-col h-full overflow-hidden">
           <h2 className="text-sm font-semibold text-gray-800 mb-2 text-center pt-4">Chat with Papermind</h2>
           <div className="flex-1 overflow-hidden">
-            <ChatInterface fileId={fileId} />
+            <ChatInterface fileId={fileId} fileName={fileName} />
           </div>
         </div>
       </div>

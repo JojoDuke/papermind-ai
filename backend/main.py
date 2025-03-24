@@ -32,9 +32,15 @@ class PDFUploadData(BaseModel):
 
 class ChatMessage(BaseModel):
     message: str
+    collection_id: str
 
 class DeleteCollection(BaseModel):
     collection_id: str
+
+class QueryCollection(BaseModel):
+    collection_id: str
+    query: str
+    model: str = "llama-3.3-70b"  # Default model
 
 @app.post("/process-pdf")
 async def process_pdf(data: PDFUploadData):
@@ -77,36 +83,7 @@ async def process_pdf(data: PDFUploadData):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-#Test Endpoint, to be deleted
-@app.post("/test")
-async def test_endpoint(chat_message: ChatMessage):
-    try:
-        # Prepare Wetro API request
-        headers = {
-            "Authorization": f"Token {WETRO_API_TOKEN}"
-        }
-        
-        data = {
-            "collection_id": COLLECTION_ID,
-            "request_query": chat_message.message,  # Use the message from the frontend
-            "model": "llama-3.3-70b"
-        }
-        
-        # Make request to Wetro
-        response = requests.post(WETRO_API_URL, json=data, headers=headers)
-        wetro_response = response.json()  
-        
-        # Extract the text response - adjust this based on Wetro's actual response structure
-        response_text = wetro_response.get('response', 'No response from Wetro')
-        if isinstance(response_text, dict):
-            response_text = str(response_text)
-        
-        # Return just the text response
-        return {"message": response_text}
-        
-    except Exception as e:
-        print(f"Error calling Wetro API: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.delete("/delete-collection")
 async def delete_collection(data: DeleteCollection):
@@ -131,4 +108,40 @@ async def delete_collection(data: DeleteCollection):
         }
         
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/query-collection")
+async def query_collection(chat_message: ChatMessage):
+    try:
+        print(f"Received query request - Message: {chat_message.message}, Collection ID: {chat_message.collection_id}")
+        
+        # Prepare Wetro API request
+        headers = {
+            "Authorization": f"Token {WETRO_API_TOKEN}"
+        }
+        
+        data = {
+            "collection_id": chat_message.collection_id,
+            "request_query": chat_message.message,
+            "model": "llama-3.3-70b"
+        }
+        
+        print(f"Sending request to Wetro with data: {data}")
+        
+        # Make request to Wetro
+        response = requests.post(WETRO_API_URL, json=data, headers=headers)
+        wetro_response = response.json()
+        
+        print(f"Wetro response: {wetro_response}")
+        
+        # Extract the text response - adjust this based on Wetro's actual response structure
+        response_text = wetro_response.get('response', 'No response from Wetro')
+        if isinstance(response_text, dict):
+            response_text = str(response_text)
+        
+        # Return just the text response
+        return {"message": response_text}
+        
+    except Exception as e:
+        print(f"Error calling Wetro API: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e)) 
