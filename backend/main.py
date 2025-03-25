@@ -4,6 +4,7 @@ from pydantic import BaseModel
 import requests
 import os
 from dotenv import load_dotenv
+import uuid  # Add import for UUID
 
 # Load environment variables from .env file
 load_dotenv()
@@ -45,7 +46,8 @@ class QueryCollection(BaseModel):
 @app.post("/process-pdf")
 async def process_pdf(data: PDFUploadData):
     try:
-        collection_id = f"pdf_{data.fileName.lower().replace(' ', '_').replace('.pdf', '')}"
+        # Generate a UUID for the collection
+        collection_id = str(uuid.uuid4())
         
         # Create Wetro collection
         collection_response = requests.post(
@@ -58,6 +60,7 @@ async def process_pdf(data: PDFUploadData):
             raise HTTPException(status_code=500, detail="Failed to create collection")
         
         # Insert PDF into collection
+        print(f"Uploading file with URL: {data.fileUrl}")
         insert_response = requests.post(
             "https://api.wetrocloud.com/v1/resource/insert/",
             headers={

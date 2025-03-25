@@ -23,6 +23,7 @@ interface FileData {
   name: string;
   url: string;
   user_id: string;
+  collection_id: string;
 }
 
 export default function DocumentPage({ params }: { params: { fileId: string } }) {
@@ -118,7 +119,7 @@ export default function DocumentPage({ params }: { params: { fileId: string } })
             <div className="flex flex-col h-full overflow-hidden">
               <h2 className="text-sm font-semibold text-gray-800 mb-2 text-center pt-4">Chat with Papermind</h2>
               <div className="flex-1 overflow-hidden">
-                <ChatInterface fileId={params.fileId} fileName={file.name} />
+                <ChatInterface fileId={params.fileId} fileName={file.name} collectionId={file.collection_id} />
               </div>
             </div>
           </div>

@@ -23,6 +23,7 @@ interface UploadedFile {
   url: string;
   created_at?: string;
   file_size?: number;
+  collection_id: string;
 }
 
 export default function Sidebar() {
@@ -46,7 +47,7 @@ export default function Sidebar() {
       try {
         const { data: files, error } = await supabase
           .from('files')
-          .select('*')
+          .select('id, user_id, name, url, created_at, file_size, collection_id')
           .order('created_at', { ascending: false });
 
         if (error) throw error;
@@ -173,13 +174,12 @@ export default function Sidebar() {
 
       // Delete from Wetro collection
       try {
-        const collection_id = `pdf_${file.name.toLowerCase().replace(' ', '_').replace('.pdf', '')}`;
         const response = await fetch('http://localhost:8000/delete-collection', {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ collection_id })
+          body: JSON.stringify({ collection_id: file.collection_id })
         });
 
         if (!response.ok) {

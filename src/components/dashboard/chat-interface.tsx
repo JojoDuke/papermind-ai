@@ -81,9 +81,10 @@ const LetterFadeIn = ({ text }: { text: string }) => {
 interface ChatInterfaceProps {
   fileId: string;
   fileName: string;
+  collectionId: string;
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ fileId, fileName }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ fileId, fileName, collectionId }) => {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
       id: '1',
@@ -166,7 +167,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ fileId, fileName }) => {
         },
         body: JSON.stringify({
           message: inputMessage.trim(),
-          collection_id: `pdf_${fileName.toLowerCase().replace(/ /g, '_').replace('.pdf', '')}`
+          collection_id: collectionId
         })
       });
 
