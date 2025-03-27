@@ -7,11 +7,7 @@ import { supabase } from "@/lib/supabase";
 import Dropzone from "react-dropzone";
 import { useToast } from "../ui/use-toast";
 import { Progress } from "../ui/progress";
-import { generateReactHelpers } from "@uploadthing/react";
-import type { OurFileRouter } from "@/app/api/uploadthing/core";
 import { useFiles } from "@/contexts/FileContext";
-
-const { useUploadThing } = generateReactHelpers<OurFileRouter>();
 
 const Dashboard = () => {
   const router = useRouter();
@@ -29,87 +25,6 @@ const Dashboard = () => {
       }
     };
   }, [uploadTimeout]);
-
-  const { startUpload } = useUploadThing("pdfUploader", {
-    onUploadProgress: (progress) => {
-      console.log("Upload progress:", progress);
-      setUploadProgress(progress);
-    },
-    onClientUploadComplete: async (res: any[]) => {
-      if (uploadTimeout) {
-        clearTimeout(uploadTimeout);
-      }
-      
-      if (res && res[0]) {
-        console.log("Upload completed:", res);
-
-        try {
-          // Get the current user's ID
-          const { data: { user }, error: userError } = await supabase.auth.getUser();
-          
-          if (userError) throw userError;
-          if (!user) throw new Error('No user found');
-
-          // Process PDF with Wetro
-          const wetroResponse = await fetch('http://localhost:8000/process-pdf', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              fileUrl: res[0].url,
-              fileName: res[0].name,
-              fileId: res[0].key
-            })
-          });
-
-          if (!wetroResponse.ok) {
-            throw new Error('Failed to process PDF with Wetro');
-          }
-
-          const { collection_id } = await wetroResponse.json();
-
-          const newFile = {
-            id: res[0].key,
-            user_id: user.id,
-            name: res[0].name,
-            url: res[0].url,
-            created_at: new Date().toISOString(),
-            file_size: res[0].size,
-            collection_id: collection_id  // Add the collection_id here
-          };
-
-          // Save file info to Supabase
-          const { error } = await supabase
-            .from('files')
-            .insert([newFile]);
-
-          if (error) throw error;
-
-          // Add the new file to context
-          addFile(newFile);
-
-          setIsUploading(false);
-          setUploadProgress(0);
-          
-          // Navigate to the new file
-          router.push(`/dashboard/d/${newFile.id}`);
-          
-          toast({
-            title: "File uploaded successfully",
-            description: `${res[0].name} has been uploaded and processed.`,
-            variant: "default",
-          });
-        } catch (error) {
-          console.error('Error saving file:', error);
-          handleUploadError(error instanceof Error ? error : new Error('Failed to save file information'));
-        }
-      }
-    },
-    onUploadError: (error: Error) => {
-      handleUploadError(error);
-    }
-  });
 
   const handleUploadError = (error: Error) => {
     console.error("Upload error:", error);
@@ -136,11 +51,111 @@ const Dashboard = () => {
       }, 300000); // 5 minutes
       
       setUploadTimeout(timeout);
+
+      const file = acceptedFiles[0]; // We only handle one file at a time
+
+      // Get the current user's ID
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!user) throw new Error('No user found');
+
+      // Generate a unique file name
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      // Upload file to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('user-files-bucket')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Simulate upload progress since Supabase Storage doesn't support progress tracking
+      const simulateProgress = () => {
+        let progress = 0;
+        const interval = setInterval(() => {
+          progress += 10;
+          if (progress > 90) {
+            clearInterval(interval);
+          } else {
+            setUploadProgress(progress);
+          }
+        }, 200);
+        return () => clearInterval(interval);
+      };
+
+      const clearSimulatedProgress = simulateProgress();
       
-      await startUpload(acceptedFiles);
+      // Get the public URL for the uploaded file
+      const { data: { publicUrl } } = supabase.storage
+        .from('user-files-bucket')
+        .getPublicUrl(filePath);
+
+      // Set progress to 100% when upload is complete
+      setUploadProgress(100);
+      clearSimulatedProgress();
+
+      // Process PDF with Wetro
+      const wetroResponse = await fetch('http://localhost:8000/process-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          fileUrl: publicUrl,
+          fileName: file.name,
+          fileId: fileName
+        })
+      });
+
+      if (!wetroResponse.ok) {
+        throw new Error('Failed to process PDF with Wetro');
+      }
+
+      const { collection_id } = await wetroResponse.json();
+
+      const newFile = {
+        id: fileName,
+        user_id: user.id,
+        name: file.name,
+        url: publicUrl,
+        created_at: new Date().toISOString(),
+        file_size: file.size,
+        collection_id: collection_id
+      };
+
+      // Save file info to Supabase
+      const { error } = await supabase
+        .from('files')
+        .insert([newFile]);
+
+      if (error) throw error;
+
+      // Add the new file to context
+      addFile(newFile);
+
+      if (uploadTimeout) {
+        clearTimeout(uploadTimeout);
+      }
+
+      setIsUploading(false);
+      setUploadProgress(0);
+      
+      // Navigate to the new file
+      router.push(`/dashboard/d/${newFile.id}`);
+      
+      toast({
+        title: "File uploaded successfully",
+        description: `${file.name} has been uploaded and processed.`,
+        variant: "default",
+      });
     } catch (err) {
       console.error("Upload error:", err);
-      handleUploadError(err instanceof Error ? err : new Error('Failed to start upload'));
+      handleUploadError(err instanceof Error ? err : new Error('Failed to upload file'));
     }
   };
 
@@ -174,7 +189,7 @@ const Dashboard = () => {
                     ) : (
                       <Upload className="h-10 w-10 text-purple-500" />
                     )}
-            </div>
+                  </div>
                   <h2 className="text-2xl font-semibold text-gray-800 mb-3">
                     {isUploading ? "Uploading..." : "Upload Your Documents"}
                   </h2>
@@ -182,7 +197,7 @@ const Dashboard = () => {
                     <div className="w-full max-w-xs space-y-2">
                       <Progress value={uploadProgress} className="h-2" />
                       <p className="text-sm text-gray-500 text-center">{Math.round(uploadProgress)}%</p>
-          </div>
+                    </div>
                   ) : (
                     <>
                       <p className="text-gray-600 text-center max-w-md mb-4">
@@ -191,10 +206,10 @@ const Dashboard = () => {
                       <div className="flex items-center space-x-2 text-sm text-gray-500">
                         <FileText className="h-4 w-4" />
                         <span>Maximum file size: 4MB</span>
-        </div>
+                      </div>
                     </>
                   )}
-        </div>
+                </div>
               </div>
             )}
           </Dropzone>

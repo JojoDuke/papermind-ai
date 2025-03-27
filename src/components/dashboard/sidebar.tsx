@@ -23,14 +23,14 @@ interface UploadedFile {
   url: string;
   created_at?: string;
   file_size?: number;
-  collection_id: string;
+  collection_id?: string;
 }
 
 export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
-  const { userFiles, setUserFiles, removeFile } = useFiles();
+  const { userFiles, setUserFiles, removeFile, addFile } = useFiles();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -144,32 +144,31 @@ export default function Sidebar() {
         router.push('/dashboard');
       }
 
-      // Delete from Supabase with retries
-      let retries = 3;
-      let supabaseSuccess = false;
-      
-      while (retries > 0 && !supabaseSuccess) {
-        try {
-          console.log(`Attempting to delete from Supabase (${retries} retries left)...`);
-          const { error: dbError, data } = await supabase
-            .from('files')
-            .delete()
-            .eq('id', file.id)
-            .select();
+      // Get the current user's ID
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!user) throw new Error('No user found');
 
-          if (dbError) {
-            console.error('Supabase delete error:', dbError);
-            throw dbError;
-          }
-          
-          console.log('Supabase deletion response:', data);
-          supabaseSuccess = true;
-        } catch (error) {
-          console.error(`Supabase delete attempt failed (${retries} retries left):`, error);
-          retries--;
-          if (retries === 0) throw error;
-          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second between retries
-        }
+      // Delete from Supabase Storage
+      const filePath = `${user.id}/${file.id}`;
+      const { error: storageError } = await supabase.storage
+        .from('user-files-bucket')
+        .remove([filePath]);
+
+      if (storageError) {
+        console.error('Error deleting from storage:', storageError);
+        throw storageError;
+      }
+
+      // Delete from Supabase database
+      const { error: dbError } = await supabase
+        .from('files')
+        .delete()
+        .eq('id', file.id);
+
+      if (dbError) {
+        console.error('Error deleting from database:', dbError);
+        throw dbError;
       }
 
       // Delete from Wetro collection
@@ -191,50 +190,15 @@ export default function Sidebar() {
         // Continue with other deletions even if Wetro deletion fails
       }
 
-      // Delete from UploadThing with retries
-      let uploadThingSuccess = false;
-      retries = 3;
-      
-      while (retries > 0 && !uploadThingSuccess) {
-        try {
-          console.log(`Attempting to delete from UploadThing (${retries} retries left)...`);
-          const response = await fetch(`/api/uploadthing/delete?key=${file.id}`, {
-            method: 'DELETE',
-            headers: {
-              'Cache-Control': 'no-cache',
-              'Pragma': 'no-cache'
-            }
-          });
-
-          console.log('UploadThing response:', response);
-          if (!response.ok) {
-            throw new Error(`Failed to delete file from UploadThing: ${response.status} ${response.statusText}`);
-          }
-          
-          uploadThingSuccess = true;
-        } catch (error) {
-          console.error(`UploadThing delete attempt failed (${retries} retries left):`, error);
-          retries--;
-          if (retries === 0) throw error;
-          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second between retries
-        }
-      }
-
       toast({
         title: "File deleted",
         description: `${file.name} has been deleted.`,
         variant: "default",
       });
     } catch (error) {
-      console.error('Delete operation failed:', error);
-      // Revert UI changes if deletion failed
-      const { data: files } = await supabase
-        .from('files')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      setUserFiles(files || []);
-
+      console.error('Error deleting file:', error);
+      // Revert UI update on error
+      addFile(file);
       toast({
         title: "Error deleting file",
         description: "Failed to delete the file. Please try again.",

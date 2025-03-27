@@ -1,0 +1,17 @@
+{
+    "mcpServers": {
+      "supabase": {
+        "command": "cmd",
+        "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-postgres", "postgresql://postgres.pkuymxykjsobcunjabod:MZm7vWQQUa5j5xPP@aws-0-eu-central-1.pooler.supabase.com:5432/postgres"]
+      },
+      "browser-tools": {
+        "command": "wsl",
+        "args": [
+          "bash",
+          "-c",
+          "cmd /c npx -y @agentdeskai/browser-tools-mcp@1.2.0"
+        ],
+        "enabled": true
+      }
+    }
+}

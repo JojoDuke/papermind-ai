@@ -6,9 +6,9 @@ headers = {
     }
 
 data = {
-    "collection_id": "test4",
-    "request_query": "Were there any fees or anything",
-    "model": "gpt-4o"
+    "collection_id": "test5",
+    "request_query": "Whats the name of the company, and which people hold the largest stake?",
+    "model": "gpt-4o-mini"
 }
 
 

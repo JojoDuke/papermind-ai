@@ -6,8 +6,8 @@ headers = {
     }
 
 data = {
-    "collection_id": "test4",
-    "resource": "https://res.cloudinary.com/dtolochpp/image/upload/v1742988113/namecheap-order-97954665_psrpri.pdf",
+    "collection_id": "test5",
+    "resource": "https://pkuymxykjsobcunjabod.supabase.co/storage/v1/object/sign/test4bucket/Founder%20Stock%20Board%20Consent.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJ0ZXN0NGJ1Y2tldC9Gb3VuZGVyIFN0b2NrIEJvYXJkIENvbnNlbnQucGRmIiwiaWF0IjoxNzQzMDkxNjMzLCJleHAiOjE3NDU2ODM2MzN9.UzVBdqf-9aii_GZsBJwSIDsqT7LpHRgarGAetTqFB9w",
     "type":"file"
 }
 
