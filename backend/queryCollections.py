@@ -7,7 +7,7 @@ headers = {
 
 data = {
     "collection_id": "test4",
-    "request_query": "What was the price",
+    "request_query": "Were there any fees or anything",
     "model": "gpt-4o"
 }
 
