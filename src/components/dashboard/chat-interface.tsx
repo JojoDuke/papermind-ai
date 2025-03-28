@@ -1,4 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, FC } from 'react';
+import { supabase } from '../../lib/supabase';
+import { Loader2 } from 'lucide-react';
 
 // Custom hook for typewriter effect
 const useTypewriter = (text: string, speed: number = 50) => {
@@ -29,6 +31,22 @@ const Typewriter = ({ text, speed }: { text: string; speed: number }) => {
 
   return <p>{displayText}</p>;
 };
+
+// Add shimmer effect component
+const ShimmerMessage = () => (
+  <div className="animate-pulse space-y-4">
+    {[1, 2, 3].map((i) => (
+      <div key={i} className={`flex mb-6 ${i % 2 === 0 ? 'justify-end' : 'justify-start'}`}>
+        {i % 2 !== 0 && (
+          <div className="flex-shrink-0 mr-3">
+            <div className="w-8 h-8 rounded-full bg-gray-200"></div>
+          </div>
+        )}
+        <div className={`rounded-lg ${i % 2 === 0 ? 'bg-gray-200' : 'bg-gray-100'} h-16`} style={{ width: `${Math.random() * 30 + 40}%` }}></div>
+      </div>
+    ))}
+  </div>
+);
 
 interface ChatMessage {
   id: string;
@@ -80,25 +98,101 @@ const LetterFadeIn = ({ text }: { text: string }) => {
 
 interface ChatInterfaceProps {
   fileId: string;
-  fileName: string;
-  collectionId: string;
+  fileName?: string;
+  collectionId?: string;
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ fileId, fileName, collectionId }) => {
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    {
-      id: '1',
-      content: "Hello! I'm Papermind AI. Ask me anything about your document.",
-      isUser: false,
-      timestamp: new Date()
-    }
-  ]);
+const ChatInterface: FC<ChatInterfaceProps> = ({ fileId, fileName, collectionId }) => {
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [currentTypingIndex, setCurrentTypingIndex] = useState(-1);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const [typingText, setTypingText] = useState('');
   const [isTypingComplete, setIsTypingComplete] = useState(false);
-  const [currentTypingIndex, setCurrentTypingIndex] = useState(-1);
+
+  const loadChatMessages = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: messages, error: fetchError } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .eq('file_id', fileId)
+        .eq('user_id', user.id)
+        .order('timestamp', { ascending: true });
+
+      if (fetchError) throw new Error(fetchError.message);
+
+      if (messages) {
+        setChatMessages(messages.map(msg => ({
+          id: msg.id,
+          content: msg.content,
+          isUser: msg.is_user,
+          timestamp: new Date(msg.timestamp)
+        })));
+      } else {
+        setChatMessages([]);
+      }
+    } catch (err) {
+      console.error('Error loading messages:', err);
+      setError('Failed to load chat messages. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Save a chat message to Supabase
+  const saveChatMessage = async (message: ChatMessage) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('chat_messages')
+        .insert([{
+          file_id: fileId,
+          content: message.content,
+          is_user: message.isUser,
+          user_id: user.id,
+          timestamp: message.timestamp.toISOString()
+        }]);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving chat message:', error);
+      setError('Failed to save message. Please try again.');
+    }
+  };
+
+  // Load chat messages when component mounts or fileId changes
+  useEffect(() => {
+    loadChatMessages();
+  }, [fileId]);
+
+  // Initialize chat with welcome message if empty
+  useEffect(() => {
+    const initializeChat = async () => {
+      if (chatMessages.length === 0 && !isLoading && !error) {
+        const welcomeMessage: ChatMessage = {
+          id: 'welcome',
+          content: 'Hello! I\'m here to help you analyze this document. What would you like to know?',
+          isUser: false,
+          timestamp: new Date()
+        };
+        await saveChatMessage(welcomeMessage);
+        setChatMessages([welcomeMessage]);
+      }
+    };
+
+    initializeChat();
+  }, [isLoading, error]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -142,61 +236,69 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ fileId, fileName, collect
     }
   }, [chatMessages, currentTypingIndex]);
 
-  // Handle sending a chat message
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim() || isProcessing) return;
-    
-    // Add user message to chat
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      content: inputMessage,
-      isUser: true,
-      timestamp: new Date()
-    };
-    
-    setChatMessages(prev => [...prev, userMessage]);
-    setInputMessage('');
-    setIsProcessing(true);
-    
+  const handleSendMessage = async (message: string) => {
+    if (!message.trim() || isProcessing) return;
+
     try {
-      // Send message to FastAPI endpoint
+      setIsProcessing(true);
+      setInputMessage('');
+
+      // Add user message to chat
+      const userMessage: ChatMessage = {
+        id: Date.now().toString(),
+        content: message,
+        isUser: true,
+        timestamp: new Date()
+      };
+
+      setChatMessages(prev => [...prev, userMessage]);
+      await saveChatMessage(userMessage);
+
+      // Send message to backend API
       const response = await fetch('http://localhost:8000/query-collection', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: inputMessage.trim(),
+          message: message.trim(),
           collection_id: collectionId
         })
       });
 
       if (!response.ok) {
-        throw new Error('Failed to get response');
+        throw new Error('Failed to get response from AI');
       }
-      
+
       const data = await response.json();
-      
-      const aiResponse: ChatMessage = {
+
+      // Create and save AI response
+      const aiMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         content: data.message,
         isUser: false,
         timestamp: new Date(),
-        isTyping: true
+        isTyping: true // Enable typing animation
       };
-      
-      setChatMessages(prev => [...prev, aiResponse]);
+
+      setChatMessages(prev => [...prev, aiMessage]);
+      await saveChatMessage(aiMessage);
+
     } catch (error) {
-      console.error('Error fetching response:', error);
-      // Show error message in chat
+      console.error('Error sending message:', error);
+      
+      // Add error message to chat
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        content: "Sorry, I'm having trouble connecting to the AI service. Please check your internet connection and try again.",
+        content: "I apologize, but I'm having trouble connecting to the AI service. Please check your internet connection and try again.",
         isUser: false,
         timestamp: new Date(),
         isTyping: true
       };
+      
       setChatMessages(prev => [...prev, errorMessage]);
+      await saveChatMessage(errorMessage);
+      setError('Failed to send message. Please try again.');
     } finally {
       setIsProcessing(false);
     }
@@ -210,7 +312,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ fileId, fileName, collect
   // Handle pressing Enter to send message
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      handleSendMessage();
+      handleSendMessage(inputMessage);
     }
   };
 
@@ -246,42 +348,64 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ fileId, fileName, collect
         className="flex-1 overflow-y-auto px-4 pt-4 pb-2 chat-scrollbar"
         style={{ height: 'calc(100% - 70px)' }}
       >
-        {chatMessages.map((message, index) => (
-          <div key={message.id} className={`flex mb-6 ${message.isUser ? 'justify-end' : 'justify-start'}`}>
-            {!message.isUser && (
-              <div className="flex-shrink-0 mr-3">
-                <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-                  <span className="text-gray-800 text-xs font-bold">AI</span>
+        {isLoading ? (
+          <ShimmerMessage />
+        ) : error ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="flex flex-col items-center space-y-4 text-center">
+              <div className="text-red-500">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <p className="text-sm text-gray-600">{error}</p>
+              <button
+                onClick={loadChatMessages}
+                className="px-4 py-2 text-sm font-medium text-white bg-purple-500 rounded-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {chatMessages.map((message, index) => (
+              <div key={message.id} className={`flex mb-6 ${message.isUser ? 'justify-end' : 'justify-start'}`}>
+                {!message.isUser && (
+                  <div className="flex-shrink-0 mr-3">
+                    <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                      <span className="text-gray-800 text-xs font-bold">AI</span>
+                    </div>
+                  </div>
+                )}
+                
+                {message.isUser ? (
+                  <div className="bg-gray-200 p-3 rounded-lg max-w-[80%]">
+                    <p className="text-sm text-gray-800">{message.content}</p>
+                  </div>
+                ) : (
+                  <div className="max-w-[80%]">
+                    <LetterFadeIn text={message.content} />
+                  </div>
+                )}
+              </div>
+            ))}
+            
+            {isProcessing && (
+              <div className="flex mb-6 justify-start">
+                <div className="flex-shrink-0 mr-3">
+                  <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                    <span className="text-gray-800 text-xs font-bold">AI</span>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                 </div>
               </div>
             )}
-            
-            {message.isUser ? (
-              <div className="bg-gray-200 p-3 rounded-lg max-w-[80%]">
-                <p className="text-sm text-gray-800">{message.content}</p>
-              </div>
-            ) : (
-              <div className="max-w-[80%]">
-                <LetterFadeIn text={message.content} />
-              </div>
-            )}
-          </div>
-        ))}
-        
-        {/* Loading indicator */}
-        {isProcessing && (
-          <div className="flex mb-6 justify-start">
-            <div className="flex-shrink-0 mr-3">
-              <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-                <span className="text-gray-800 text-xs font-bold">AI</span>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-            </div>
-          </div>
+          </>
         )}
       </div>
       
@@ -298,7 +422,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ fileId, fileName, collect
           />
           <button
             className="absolute right-1 bg-purple-500 text-white p-2 rounded-full hover:bg-purple-600 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500"
-            onClick={handleSendMessage}
+            onClick={() => handleSendMessage(inputMessage)}
             disabled={isProcessing}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
