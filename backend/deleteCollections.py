@@ -25,6 +25,5 @@ def delete_collection(collection_id):
         return None
 
 if __name__ == "__main__":
-    # Example usage
     collection_id = input("Enter collection ID to delete: ")
     delete_collection(collection_id)
