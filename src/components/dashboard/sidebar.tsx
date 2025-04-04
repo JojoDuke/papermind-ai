@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { LogOut, Loader2, PanelLeftClose, PanelLeftOpen, FileText, AlertCircle, Plus, MoreVertical, Trash } from "lucide-react";
+import { LogOut, Loader2, PanelLeftClose, PanelLeftOpen, FileText, AlertCircle, Plus, MoreVertical, Trash, Coins } from "lucide-react";
 import { Button } from "../ui/button";
 import { Tooltip } from "../ui/tooltip";
 import { supabase } from "@/lib/supabase";
@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useFiles } from "@/contexts/FileContext";
+import { useCredits } from "@/contexts/CreditsContext";
 
 // Define a type for uploaded files
 interface UploadedFile {
@@ -31,6 +32,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { toast } = useToast();
   const { userFiles, setUserFiles, removeFile, addFile } = useFiles();
+  const { credits, isPremium } = useCredits();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -222,9 +224,32 @@ export default function Sidebar() {
       <div 
         id="sidebar"
         className={`absolute top-0 left-0 h-full bg-white border-r border-gray-200 shadow-lg flex flex-col transition-all duration-300 z-10 ${
-          isSidebarCollapsed ? 'w-16' : 'w-64'
+          isSidebarCollapsed ? 'w-16' : 'w-72'
         }`}
       >
+        {/* Credits Display */}
+        <div className={`p-4 border-b border-gray-200 ${isSidebarCollapsed ? "justify-center" : "justify-between"} flex items-center`}>
+          <div className={`flex items-center gap-2 ${isSidebarCollapsed ? "w-8 h-8 justify-center" : ""}`}>
+            <Coins className="w-5 h-5 text-purple-500" />
+            {!isSidebarCollapsed && (
+              <div>
+                <p className="text-sm font-medium">{credits} Credits</p>
+                <p className="text-xs text-gray-500">{isPremium ? 'Premium' : 'Free'} Plan</p>
+              </div>
+            )}
+          </div>
+          {!isSidebarCollapsed && !isPremium && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs"
+              onClick={() => window.location.href = 'https://test.checkout.dodopayments.com/buy/pdt_idWXm8RKDDzZ5nnMMDyLo?quantity=1'}
+            >
+              Upgrade
+            </Button>
+          )}
+        </div>
+        
         {/* Sidebar Header with Toggle Button */}
         <div className={`p-4 border-b border-gray-200 flex ${isSidebarCollapsed ? 'justify-center' : 'justify-between items-center'}`}>
           <Tooltip 

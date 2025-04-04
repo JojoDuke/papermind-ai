@@ -3,8 +3,8 @@ import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-
 import { Toaster } from "@/components/ui/toaster";
+import { CreditsProvider } from "@/contexts/CreditsContext";
 
 import "react-loading-skeleton/dist/skeleton.css";
 import "simplebar-react/dist/simplebar.min.css";
@@ -28,8 +28,10 @@ export default function RootLayout({
     <html lang="en" className={cn("light", jakarta.variable)}>
       <body className="min-h-screen font-sans antialiased">
         <Providers>
-          {children}
-          <Toaster />
+          <CreditsProvider>
+            {children}
+            <Toaster />
+          </CreditsProvider>
         </Providers>
       </body>
     </html>

@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect, FC } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Loader2 } from 'lucide-react';
+import { useToast } from "../ui/use-toast";
+import { useCredits } from "@/contexts/CreditsContext";
+import { UpgradeModal } from "./upgrade-modal";
 
 // Custom hook for typewriter effect
 const useTypewriter = (text: string, speed: number = 50) => {
@@ -112,6 +115,9 @@ const ChatInterface: FC<ChatInterfaceProps> = ({ fileId, fileName, collectionId 
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const [typingText, setTypingText] = useState('');
   const [isTypingComplete, setIsTypingComplete] = useState(false);
+  const { toast } = useToast();
+  const { credits, isPremium, updateCredits } = useCredits();
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const loadChatMessages = async () => {
     try {
@@ -239,6 +245,12 @@ const ChatInterface: FC<ChatInterfaceProps> = ({ fileId, fileName, collectionId 
   const handleSendMessage = async (message: string) => {
     if (!message.trim() || isProcessing) return;
 
+    // Check if user has credits
+    if (credits === 0 && !isPremium) {
+      setShowUpgradeModal(true);
+      return;
+    }
+
     try {
       setIsProcessing(true);
       setInputMessage('');
@@ -253,6 +265,18 @@ const ChatInterface: FC<ChatInterfaceProps> = ({ fileId, fileName, collectionId 
 
       setChatMessages(prev => [...prev, userMessage]);
       await saveChatMessage(userMessage);
+
+      // Deduct credit before making the API call
+      if (!isPremium) {
+        try {
+          await updateCredits(credits - 1);
+        } catch (err: unknown) {
+          if (err instanceof Error) {
+            throw err;
+          }
+          throw new Error('Failed to deduct credit');
+        }
+      }
 
       // Send message to backend API
       const response = await fetch('http://localhost:8000/query-collection', {
@@ -278,7 +302,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({ fileId, fileName, collectionId 
         content: data.message,
         isUser: false,
         timestamp: new Date(),
-        isTyping: true // Enable typing animation
+        isTyping: true
       };
 
       setChatMessages(prev => [...prev, aiMessage]);
@@ -290,7 +314,9 @@ const ChatInterface: FC<ChatInterfaceProps> = ({ fileId, fileName, collectionId 
       // Add error message to chat
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        content: "I apologize, but I'm having trouble connecting to the AI service. Please check your internet connection and try again.",
+        content: error.message === 'Failed to deduct credit' 
+          ? "I apologize, but there was an error deducting your credit. Please try again."
+          : "I apologize, but I'm having trouble connecting to the AI service. Please check your internet connection and try again.",
         isUser: false,
         timestamp: new Date(),
         isTyping: true
@@ -317,7 +343,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({ fileId, fileName, collectionId 
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <>
       {/* Add the keyframes for the animations */}
       <style>{fadeInAnimation}</style>
       
@@ -431,7 +457,11 @@ const ChatInterface: FC<ChatInterfaceProps> = ({ fileId, fileName, collectionId 
           </button>
         </div>
       </div>
-    </div>
+      <UpgradeModal 
+        isOpen={showUpgradeModal} 
+        onClose={() => setShowUpgradeModal(false)} 
+      />
+    </>
   );
 };
 
