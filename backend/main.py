@@ -165,81 +165,10 @@ async def query_collection(chat_message: ChatMessage):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/webhook/dodo-payments")
-async def handle_webhook(request: Request, webhook: SubscriptionWebhook):
-    print(f"Received webhook event: {webhook.event}")
-    print(f"Webhook data: {webhook.data}")
-    
-    # Verify webhook signature
-    signature = request.headers.get("X-Dodo-Signature")
-    webhook_secret = os.getenv("DODO_WEBHOOK_SECRET")
-    
-    if not signature or not webhook_secret:
-        print("Missing signature or webhook secret")
-        raise HTTPException(status_code=400, detail="Missing signature or webhook secret")
-    
-    # Get raw body for signature verification
-    body = await request.body()
-    print(f"Raw webhook body: {body.decode()}")
-    
-    # Verify signature
-    expected_signature = hmac.new(
-        webhook_secret.encode(),
-        body,
-        hashlib.sha256
-    ).hexdigest()
-    
-    if not hmac.compare_digest(signature, expected_signature):
-        print(f"Invalid signature. Expected: {expected_signature}, Received: {signature}")
-        raise HTTPException(status_code=400, detail="Invalid signature")
-    
-    try:
-        # Handle different webhook events
-        if webhook.event == "payment.successful":
-            print("Processing successful payment event")
-            # Extract user ID from metadata
-            user_id = webhook.data.get("metadata", {}).get("user_id")
-            if not user_id:
-                print("Missing user_id in metadata")
-                raise HTTPException(status_code=400, detail="Missing user_id in metadata")
-            
-            print(f"Updating premium status for user: {user_id}")
-            # Update user credits and premium status in Supabase
-            response = supabase.table("users").update({
-                "credits_remaining": 100,  # Reset to 100 credits
-                "is_premium": True,        # Set premium status
-                "subscription_id": webhook.data.get("subscription_id")  # Store subscription ID
-            }).eq("id", user_id).execute()
-            
-            if response.error:
-                print(f"Error updating user: {response.error}")
-                raise HTTPException(status_code=500, detail=str(response.error))
-            
-            print("Successfully updated user to premium status")
-            return {"status": "success", "message": "User upgraded to premium"}
-            
-        elif webhook.event == "subscription.cancelled":
-            print("Processing subscription cancellation event")
-            # Handle subscription cancellation
-            subscription_id = webhook.data.get("subscription_id")
-            if not subscription_id:
-                print("Missing subscription_id")
-                raise HTTPException(status_code=400, detail="Missing subscription_id")
-            
-            # Update user premium status in Supabase
-            response = supabase.table("users").update({
-                "is_premium": False
-            }).eq("subscription_id", subscription_id).execute()
-            
-            if response.error:
-                print(f"Error cancelling subscription: {response.error}")
-                raise HTTPException(status_code=500, detail=str(response.error))
-            
-            print("Successfully cancelled subscription")
-            return {"status": "success", "message": "Subscription cancelled"}
-            
-        print(f"Unhandled webhook event: {webhook.event}")
-        return {"status": "success", "message": f"Webhook received: {webhook.event}"}
-        
-    except Exception as e:
-        print(f"Error processing webhook: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e)) 
+async def handle_webhook(request: Request):
+    print("✅ Webhook endpoint was hit!")
+
+    body_bytes = await request.body()
+    print("📦 Raw body:", body_bytes.decode())
+
+    return {"status": "ok"}

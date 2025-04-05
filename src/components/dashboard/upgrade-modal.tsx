@@ -33,22 +33,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
   const handleUpgrade = () => {
     if (!userId) return;
 
-    const successUrl = `${window.location.origin}/dashboard?subscription=success`;
-    const cancelUrl = `${window.location.origin}/dashboard`;
-
-    // Create base URL
-    const checkoutUrl = new URL('https://test.checkout.dodopayments.com/buy/pdt_idWXm8RKDDzZ5nnMMDyLo');
-    
-    // Add parameters with proper encoding
-    const params = new URLSearchParams({
-      'quantity': '1',
-      'metadata[user_id]': userId,
-      'success_url': successUrl,
-      'cancel_url': cancelUrl,
-    });
-    
-    // Combine URL and parameters
-    window.location.href = `${checkoutUrl.toString()}?${params.toString()}`;
+    window.location.href = "https://test.checkout.dodopayments.com/buy/pdt_idWXm8RKDDzZ5nnMMDyLo?quantity=1&redirect_url=https://usemidas.app";
   };
 
   return (

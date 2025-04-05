@@ -243,7 +243,7 @@ export default function Sidebar() {
               variant="outline"
               size="sm"
               className="text-xs"
-              onClick={() => window.location.href = 'https://test.checkout.dodopayments.com/buy/pdt_idWXm8RKDDzZ5nnMMDyLo?quantity=1'}
+              onClick={() => window.location.href = 'https://test.checkout.dodopayments.com/buy/pdt_idWXm8RKDDzZ5nnMMDyLo?quantity=1&redirect_url=https://usemidas.app'}
             >
               Upgrade
             </Button>

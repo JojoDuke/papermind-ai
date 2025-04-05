@@ -314,9 +314,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({ fileId, fileName, collectionId 
       // Add error message to chat
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        content: error.message === 'Failed to deduct credit' 
-          ? "I apologize, but there was an error deducting your credit. Please try again."
-          : "I apologize, but I'm having trouble connecting to the AI service. Please check your internet connection and try again.",
+        content: "I apologize, but I'm having trouble connecting to the AI service. Please check your internet connection and try again.",
         isUser: false,
         timestamp: new Date(),
         isTyping: true
