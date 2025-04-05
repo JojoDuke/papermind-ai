@@ -279,7 +279,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({ fileId, fileName, collectionId 
       }
 
       // Send message to backend API
-      const response = await fetch('http://localhost:8000/query-collection', {
+      const response = await fetch('https://papermind-ai-backend.onrender.com/query-collection', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

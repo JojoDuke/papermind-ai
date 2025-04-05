@@ -4,7 +4,8 @@ from pydantic import BaseModel
 import requests
 import os
 from dotenv import load_dotenv
-import uuid  # Add import for UUID
+import uuid 
+import json
 import hmac
 import hashlib
 from supabase import create_client, Client
@@ -141,7 +142,7 @@ async def query_collection(chat_message: ChatMessage):
         data = {
             "collection_id": chat_message.collection_id,
             "request_query": chat_message.message,
-            "model": "llama-3.3-70b"
+            "model": "meta-llama/llama-4-scout-17b-16e-instruct"
         }
         
         print(f"Sending request to Wetro with data: {data}")
@@ -165,10 +166,20 @@ async def query_collection(chat_message: ChatMessage):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/webhook/dodo-payments")
-async def handle_webhook(request: Request):
-    print("✅ Webhook endpoint was hit!")
+async def dodo_webhook(request: Request):
+    raw_body = await request.body()
+    print("Webhook endpoint was hit!")
 
-    body_bytes = await request.body()
-    print("📦 Raw body:", body_bytes.decode())
+    try:
+        payload = json.loads(raw_body)
+        #print("Raw body:", payload)
+
+        if payload.get("type") == "payment.succeeded":
+            print("Payment succeeded detected!")
+            response = supabase.table("users").update({"credits_remaining": 5}).eq("email", "jojoamankwa@gmail.com").execute()
+            print("Supabase update response:", response)
+
+    except Exception as e:
+        print("Error parsing webhook payload:", e)
 
     return {"status": "ok"}

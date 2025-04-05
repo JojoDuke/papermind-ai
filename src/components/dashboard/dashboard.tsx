@@ -100,7 +100,7 @@ const Dashboard = () => {
       clearSimulatedProgress();
 
       // Process PDF with Wetro
-      const wetroResponse = await fetch('http://localhost:8000/process-pdf', {
+      const wetroResponse = await fetch('https://papermind-ai-backend.onrender.com/process-pdf', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
