@@ -176,7 +176,7 @@ async def dodo_webhook(request: Request):
 
         if payload.get("type") == "payment.succeeded":
             print("Payment succeeded detected!")
-            response = supabase.table("users").update({"credits_remaining": 5}).eq("email", "jojoamankwa@gmail.com").execute()
+            response = supabase.table("users").update({"credits_remaining": 2}).eq("email", "jojoamankwa@gmail.com").execute()
             print("Supabase update response:", response)
 
     except Exception as e:
