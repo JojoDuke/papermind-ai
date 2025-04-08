@@ -11,7 +11,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 export default function SignInPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = 'dashboard';
+  const redirectTo = '/dashboard';
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,15 +34,12 @@ export default function SignInPage() {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate form
     if (!isFormValid) return;
     
     setLoading(true);
     setError(null);
     
     try {
-      console.log('Attempting to sign in...');
-      // Sign in with Supabase Auth
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -50,14 +47,11 @@ export default function SignInPage() {
       
       if (signInError) throw signInError;
       
-      console.log('Sign-in successful, session:', data.session ? 'exists' : 'does not exist');
-      
-      // Ensure session is established before redirecting
       if (data.session) {
-        // Use router.push for client-side navigation
-        router.push(redirectTo);
+        // Simple redirect after successful sign in
+        window.location.href = redirectTo;
       } else {
-        throw new Error("Failed to establish session");
+        throw new Error("Failed to sign in");
       }
     } catch (err: any) {
       console.error("Sign-in error:", err);
@@ -182,13 +176,11 @@ export default function SignInPage() {
           className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 font-medium py-2.5 flex items-center justify-center"
           onClick={async () => {
             try {
+              setLoading(true);
               const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                  redirectTo: `${window.location.origin}/auth/callback`,
-                  queryParams: {
-                    redirectTo: redirectTo
-                  }
+                  redirectTo: `${window.location.origin}/auth/callback`
                 }
               });
               
@@ -199,8 +191,11 @@ export default function SignInPage() {
             } catch (err) {
               console.error("OAuth exception:", err);
               setError('An error occurred during Google sign-in');
+            } finally {
+              setLoading(false);
             }
           }}
+          disabled={loading}
         >
           <Image
             src="/google.svg"
@@ -209,7 +204,7 @@ export default function SignInPage() {
             height={20}
             className="mr-3"
           />
-          Continue with Google
+          {loading ? 'Connecting...' : 'Continue with Google'}
         </Button>
 
         <div className="mt-8 text-center text-sm">
