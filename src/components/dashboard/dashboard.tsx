@@ -16,6 +16,8 @@ const Dashboard = () => {
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadTimeout, setUploadTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [isPremium, setIsPremium] = useState(false);
+  const maxFileSize = isPremium ? 100 * 1024 * 1024 : 4 * 1024 * 1024; // 100MB or 4MB
 
   // Clear timeout on unmount
   useEffect(() => {
@@ -25,6 +27,26 @@ const Dashboard = () => {
       }
     };
   }, [uploadTimeout]);
+
+  // Add useEffect to check premium status
+  useEffect(() => {
+    const checkPremiumStatus = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('is_premium')
+          .eq('id', user.id)
+          .single();
+        
+        if (userData) {
+          setIsPremium(userData.is_premium);
+        }
+      }
+    };
+    
+    checkPremiumStatus();
+  }, []);
 
   const handleUploadError = (error: Error) => {
     console.error("Upload error:", error);
@@ -174,7 +196,7 @@ const Dashboard = () => {
           <Dropzone
             onDrop={handleUpload}
             accept={{ "application/pdf": [".pdf"] }}
-            maxSize={4 * 1024 * 1024} // 4MB
+            maxSize={maxFileSize}
           >
             {({getRootProps, getInputProps, isDragActive}) => (
               <div 
@@ -205,7 +227,7 @@ const Dashboard = () => {
                       </p>
                       <div className="flex items-center space-x-2 text-sm text-gray-500">
                         <FileText className="h-4 w-4" />
-                        <span>Maximum file size: 4MB</span>
+                        <span>Maximum file size: {isPremium ? '100MB' : '4MB'}</span>
                       </div>
                     </>
                   )}

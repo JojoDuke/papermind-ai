@@ -3,10 +3,35 @@ import { writeFile } from 'fs/promises';
 import { join } from 'path';
 import { mkdir } from 'fs/promises';
 import * as fs from 'fs/promises';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
 
 // Handle POST requests to /api/local-upload
 export async function POST(request: NextRequest) {
   try {
+    const supabase = createServerSupabaseClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const { data: userData, error } = await supabase
+      .from('users')
+      .select('is_premium')
+      .eq('id', session.user.id)
+      .single();
+
+    if (error || !userData) {
+      return NextResponse.json(
+        { error: 'Failed to retrieve user data' },
+        { status: 500 }
+      );
+    }
+
+    const maxFileSize = userData.is_premium ? 100 * 1024 * 1024 : 4 * 1024 * 1024; // 100MB for premium, 4MB for free
+
     const formData = await request.formData();
     const file = formData.get('file') as File;
     
@@ -25,10 +50,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check file size (4MB limit)
-    if (file.size > 4 * 1024 * 1024) {
+    // Check file size
+    if (file.size > maxFileSize) {
       return NextResponse.json(
-        { error: 'File size exceeds 4MB limit' },
+        { error: `File size exceeds ${maxFileSize / (1024 * 1024)}MB limit` },
         { status: 400 }
       );
     }

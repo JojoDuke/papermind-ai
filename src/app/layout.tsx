@@ -5,6 +5,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { CreditsProvider } from "@/contexts/CreditsContext";
+import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 
 import "react-loading-skeleton/dist/skeleton.css";
 import "simplebar-react/dist/simplebar.min.css";
@@ -33,6 +34,7 @@ export default function RootLayout({
             <Toaster />
           </CreditsProvider>
         </Providers>
+        <GoogleAnalytics />
       </body>
     </html>
   );
