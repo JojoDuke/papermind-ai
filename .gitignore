@@ -40,5 +40,9 @@ yarn-error.log*
 next-env.d.ts
 
 # cursor
-.cursorrules
-/cursor
+.cursor
+/.cursor
+.mcp.json
+.cursor/
+.cursor/*
+mcp.json
