@@ -51,12 +51,11 @@ export default function SignInPage() {
       if (signInError) throw signInError;
       
       console.log('Sign-in successful, session:', data.session ? 'exists' : 'does not exist');
-      console.log('Redirecting to:', redirectTo);
       
       // Ensure session is established before redirecting
       if (data.session) {
-        // Force a full page reload to ensure the session is properly recognized
-        window.location.href = redirectTo;
+        // Use router.push for client-side navigation
+        router.push(redirectTo);
       } else {
         throw new Error("Failed to establish session");
       }
@@ -186,15 +185,20 @@ export default function SignInPage() {
               const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                  redirectTo: `${window.location.origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`
+                  redirectTo: `${window.location.origin}/auth/callback`,
+                  queryParams: {
+                    redirectTo: redirectTo
+                  }
                 }
               });
               
               if (error) {
                 console.error("OAuth error:", error);
+                setError(error.message);
               }
             } catch (err) {
               console.error("OAuth exception:", err);
+              setError('An error occurred during Google sign-in');
             }
           }}
         >

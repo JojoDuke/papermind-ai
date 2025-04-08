@@ -8,12 +8,6 @@ const protectedRoutes = ['/dashboard', '/dashboard/d'];
 const publicRoutes = ['/signin', '/signup', '/auth/callback'];
 
 export async function middleware(req: NextRequest) {
-  // Skip middleware in development to simplify debugging
-  if (process.env.NODE_ENV === 'development') {
-    //console.log('Middleware: Skipping in development mode');
-    return NextResponse.next();
-  }
-
   const res = NextResponse.next();
   const supabase = createMiddlewareClient({ req, res });
   
@@ -29,34 +23,36 @@ export async function middleware(req: NextRequest) {
   const isPublicRoute = publicRoutes.some(route => 
     path === route || path.startsWith(`${route}/`)
   );
-  
-  // Only check authentication for protected routes
-  if (isProtectedRoute) {
-    // Check if user is authenticated
-    const { data: { session } } = await supabase.auth.getSession();
+
+  try {
+    // Refresh session if it exists
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
+    if (error) {
+      console.error('Middleware: Session error:', error);
+    }
     
     // If no session and on a protected route, redirect to signin
-    if (!session) {
+    if (isProtectedRoute && !session) {
       console.log('Middleware: No session found, redirecting to signin');
       const redirectUrl = new URL('/signin', req.url);
-      // Add the original URL as a query parameter to redirect back after login
       redirectUrl.searchParams.set('redirectTo', path);
       return NextResponse.redirect(redirectUrl);
     }
     
-    console.log('Middleware: Session found, allowing access to protected route');
-  }
-  
-  // If it's the signin page and the user is already authenticated, redirect to dashboard
-  if (isPublicRoute) {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
+    // If on a public route and user is authenticated, redirect to dashboard
+    if (isPublicRoute && session) {
       console.log('Middleware: User already authenticated, redirecting to dashboard');
       return NextResponse.redirect(new URL('/dashboard', req.url));
     }
+    
+    // Update response headers
+    return res;
+  } catch (e) {
+    console.error('Middleware: Error:', e);
+    // On error, allow the request to continue
+    return res;
   }
-  
-  return res;
 }
 
 // Configure which paths the middleware should run on
