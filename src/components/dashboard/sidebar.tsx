@@ -37,6 +37,7 @@ export default function Sidebar() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isLoadingFiles, setIsLoadingFiles] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
 
   // Get current file ID from URL if we're on a document page
   const currentFileId = pathname.startsWith('/dashboard/d/') 
@@ -68,6 +69,17 @@ export default function Sidebar() {
 
     loadUserFiles();
   }, [toast, setUserFiles]);
+
+  // Add useEffect to get user ID
+  useEffect(() => {
+    const getUserId = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+      }
+    };
+    getUserId();
+  }, []);
 
   const handleLogoutClick = () => {
     setShowLogoutConfirm(true);
@@ -218,6 +230,14 @@ export default function Sidebar() {
     router.push('/dashboard');
   };
 
+  const handleUpgrade = () => {
+    if (!userId) return;
+    
+    // Pass user ID in metadata
+    const paymentUrl = `https://test.checkout.dodopayments.com/buy/pdt_idWXm8RKDDzZ5nnMMDyLo?quantity=1&redirect_url=${encodeURIComponent('http://localhost:3000/dashboard')}&metadata[user_id]=${encodeURIComponent(userId)}`;
+    window.location.href = paymentUrl;
+  };
+
   return (
     <>
       {/* Sidebar - Absolute positioned */}
@@ -243,7 +263,7 @@ export default function Sidebar() {
               variant="outline"
               size="sm"
               className="text-xs"
-              onClick={() => window.location.href = 'https://test.checkout.dodopayments.com/buy/pdt_idWXm8RKDDzZ5nnMMDyLo?quantity=1&redirect_url=https://usemidas.app'}
+              onClick={handleUpgrade}
             >
               Upgrade
             </Button>

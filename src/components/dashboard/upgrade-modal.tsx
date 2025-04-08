@@ -32,8 +32,10 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
 
   const handleUpgrade = () => {
     if (!userId) return;
-
-    window.location.href = "https://test.checkout.dodopayments.com/buy/pdt_idWXm8RKDDzZ5nnMMDyLo?quantity=1&redirect_url=https://usemidas.app";
+    
+    // Pass user ID in metadata
+    const paymentUrl = `https://test.checkout.dodopayments.com/buy/pdt_idWXm8RKDDzZ5nnMMDyLo?quantity=1&redirect_url=${encodeURIComponent('http://localhost:3000/dashboard')}&metadata[user_id]=${encodeURIComponent(userId)}`;
+    window.location.href = paymentUrl;
   };
 
   return (

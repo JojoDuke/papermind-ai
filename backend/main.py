@@ -9,6 +9,7 @@ import json
 import hmac
 import hashlib
 from supabase import create_client, Client
+import datetime
 
 # Load environment variables from .env file
 load_dotenv()
@@ -172,14 +173,30 @@ async def dodo_webhook(request: Request):
 
     try:
         payload = json.loads(raw_body)
-        #print("Raw body:", payload)
+        print("Raw body:", payload)
 
         if payload.get("type") == "payment.succeeded":
             print("Payment succeeded detected!")
-            response = supabase.table("users").update({"credits_remaining": 2}).eq("email", "jojoamankwa@gmail.com").execute()
+            
+            # Get user ID from metadata
+            metadata = payload.get("data", {}).get("metadata", {})
+            user_id = metadata.get("user_id")
+            print(f"User ID from metadata: {user_id}")
+
+            if not user_id:
+                print("No user_id found in metadata")
+                return {"status": "error", "message": "No user_id in metadata"}
+
+            # Update user's subscription status and credits
+            response = supabase.table("users").update({
+                "credits_remaining": 100,  # Reset credits to 100
+                "is_premium": True
+            }).eq("id", user_id).execute()
+            
             print("Supabase update response:", response)
 
-    except Exception as e:
-        print("Error parsing webhook payload:", e)
+        return {"status": "ok"}
 
-    return {"status": "ok"}
+    except Exception as e:
+        print("Error processing webhook:", e)
+        return {"status": "error", "message": str(e)}
