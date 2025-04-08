@@ -11,7 +11,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 export default function SignInPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = 'usepapermind.com/dashboard';
+  const redirectTo = 'dashboard';
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
