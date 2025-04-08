@@ -234,7 +234,7 @@ export default function Sidebar() {
     if (!userId) return;
     
     // Pass user ID in metadata
-    const paymentUrl = `https://test.checkout.dodopayments.com/buy/pdt_idWXm8RKDDzZ5nnMMDyLo?quantity=1&redirect_url=${encodeURIComponent('http://localhost:3000/dashboard')}&metadata[user_id]=${encodeURIComponent(userId)}`;
+    const paymentUrl = `https://test.checkout.dodopayments.com/buy/pdt_idWXm8RKDDzZ5nnMMDyLo?quantity=1&redirect_url=${encodeURIComponent('http://localhost:3000/dashboard')}&metadata_user_id=${encodeURIComponent(userId)}`;
     window.location.href = paymentUrl;
   };
 

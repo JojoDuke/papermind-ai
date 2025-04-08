@@ -4,6 +4,15 @@ import { Loader2 } from 'lucide-react';
 import { useToast } from "../ui/use-toast";
 import { useCredits } from "@/contexts/CreditsContext";
 import { UpgradeModal } from "./upgrade-modal";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Coins, Sparkles } from 'lucide-react';
 
 // Custom hook for typewriter effect
 const useTypewriter = (text: string, speed: number = 50) => {
@@ -118,6 +127,7 @@ const ChatInterface: FC<ChatInterfaceProps> = ({ fileId, fileName, collectionId 
   const { toast } = useToast();
   const { credits, isPremium, updateCredits } = useCredits();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showPurchaseCreditsModal, setShowPurchaseCreditsModal] = useState(false);
 
   const loadChatMessages = async () => {
     try {
@@ -246,8 +256,12 @@ const ChatInterface: FC<ChatInterfaceProps> = ({ fileId, fileName, collectionId 
     if (!message.trim() || isProcessing) return;
 
     // Check if user has credits
-    if (credits === 0 && !isPremium) {
-      setShowUpgradeModal(true);
+    if (credits === 0) {
+      if (isPremium) {
+        setShowPurchaseCreditsModal(true);
+      } else {
+        setShowUpgradeModal(true);
+      }
       return;
     }
 
@@ -266,8 +280,8 @@ const ChatInterface: FC<ChatInterfaceProps> = ({ fileId, fileName, collectionId 
       setChatMessages(prev => [...prev, userMessage]);
       await saveChatMessage(userMessage);
 
-      // Deduct credit before making the API call
-      if (!isPremium) {
+      // Deduct credits for all users if they have credits available
+      if (credits > 0) {
         try {
           await updateCredits(credits - 1);
         } catch (err: unknown) {
@@ -459,6 +473,49 @@ const ChatInterface: FC<ChatInterfaceProps> = ({ fileId, fileName, collectionId 
         isOpen={showUpgradeModal} 
         onClose={() => setShowUpgradeModal(false)} 
       />
+      <Dialog open={showPurchaseCreditsModal} onOpenChange={setShowPurchaseCreditsModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Coins className="h-5 w-5 text-purple-500" />
+              Purchase Additional Credits
+            </DialogTitle>
+            <DialogDescription>
+              Get 50 more credits to continue using the chat feature.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-gray-500">
+              You've used all your 100 credits. No worries! You can purchase an additional package of credits:
+            </p>
+            <ul className="list-disc pl-4 text-sm text-gray-500 space-y-2">
+              <li>50 additional credits</li>
+              <li>One-time purchase</li>
+              <li>Instant activation</li>
+              <li>Use anytime</li>
+            </ul>
+          </div>
+          <div className="flex justify-center w-full gap-2">
+            <Button 
+              onClick={() => {
+                // Logic to handle purchasing credits
+                setShowPurchaseCreditsModal(false);
+              }}
+              className="flex-1 bg-gradient-to-r from-purple-500 via-purple-600 to-indigo-500 hover:from-purple-600 hover:via-purple-700 hover:to-indigo-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] flex items-center justify-center gap-2"
+            >
+              <Sparkles className="h-5 w-5" />
+              Purchase Credits ($5)
+            </Button>
+            <Button
+              onClick={() => setShowPurchaseCreditsModal(false)}
+              variant="outline"
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

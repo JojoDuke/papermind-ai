@@ -10,6 +10,13 @@
         "--access-token",
         "sbp_cb8fb59aa2ff7aa3f9d730fd070041e548de968d"
       ]
+    },
+    "dodopayments_api": {
+      "command": "npx",
+      "args": ["-y", "dodopayments-mcp"],
+      "env": {
+        "DODO_PAYMENTS_API_KEY": "VCqRBRnCzp3F8XcR.qrGWhLFhqK5mFfMB6D-LZtngBqX_-mtJR7DZtrtR2_oLwAZD"
+      }
     }
   }
 }

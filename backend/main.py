@@ -10,6 +10,7 @@ import hmac
 import hashlib
 from supabase import create_client, Client
 import datetime
+from dodopayments import DodoPayments
 
 # Load environment variables from .env file
 load_dotenv()
@@ -17,6 +18,11 @@ load_dotenv()
 # Initialize Supabase client with service role key
 supabase_url = os.getenv("SUPABASE_URL")
 service_key = os.getenv("SUPABASE_SERVICE_KEY")
+
+# Initialize Dodo Payments client
+dodo_client = DodoPayments(
+    bearer_token=os.getenv("DODO_PAYMENTS_API_KEY")
+)
 
 if not supabase_url or not service_key:
     raise ValueError("Missing Supabase configuration. Please check your .env file.")
@@ -38,7 +44,6 @@ app.add_middleware(
 # Wetro API configuration
 WETRO_API_URL = "https://api.wetrocloud.com/v1/collection/query/"
 WETRO_API_TOKEN = os.getenv("WETRO_API_TOKEN")
-COLLECTION_ID = os.getenv("WETRO_COLLECTION_ID")
 
 # Define models
 class PDFUploadData(BaseModel):
@@ -200,3 +205,4 @@ async def dodo_webhook(request: Request):
     except Exception as e:
         print("Error processing webhook:", e)
         return {"status": "error", "message": str(e)}
+

@@ -30,12 +30,33 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
     getUserId();
   }, []);
 
-  const handleUpgrade = () => {
+  const handleUpgrade = async () => {
     if (!userId) return;
     
-    // Pass user ID in metadata
-    const paymentUrl = `https://test.checkout.dodopayments.com/buy/pdt_idWXm8RKDDzZ5nnMMDyLo?quantity=1&redirect_url=${encodeURIComponent('http://localhost:3000/dashboard')}&metadata[user_id]=${encodeURIComponent(userId)}`;
-    window.location.href = paymentUrl;
+    try {
+      // Call our backend to create the payment
+      const response = await fetch('https://papermind-ai-backend.onrender.com/create-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: userId
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create payment');
+      }
+
+      const data = await response.json();
+      
+      // Redirect to the payment URL
+      window.location.href = data.payment_url;
+    } catch (error) {
+      console.error('Error creating payment:', error);
+      // You might want to show an error toast here
+    }
   };
 
   return (
@@ -58,6 +79,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
             <li>100 monthly credits</li>
             <li>Exclusive podcast feature</li>
             <li>Advanced AI document analysis</li>
+            <li>Total Upload Limit of 100MB</li>
             <li>Priority support</li>
           </ul>
         </div>
