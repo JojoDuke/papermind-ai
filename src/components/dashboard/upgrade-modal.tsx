@@ -79,7 +79,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
             <li>100 monthly credits</li>
             <li>Exclusive podcast feature</li>
             <li>Advanced AI document analysis</li>
-            <li>Increased file size limit (from 4MB to 100MB)</li>
+            <li>Total Upload Limit increased to 100MB</li>
             <li>Priority support</li>
           </ul>
         </div>
