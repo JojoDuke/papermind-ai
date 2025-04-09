@@ -8,6 +8,14 @@ import { Tooltip } from "../ui/tooltip";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "../ui/use-toast";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -35,7 +43,7 @@ export default function Sidebar() {
   const { credits, isPremium } = useCredits();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [isLoadingFiles, setIsLoadingFiles] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
 
@@ -82,11 +90,7 @@ export default function Sidebar() {
   }, []);
 
   const handleLogoutClick = () => {
-    setShowLogoutConfirm(true);
-  };
-
-  const handleLogoutCancel = () => {
-    setShowLogoutConfirm(false);
+    setShowLogoutDialog(true);
   };
 
   const handleLogout = async () => {
@@ -98,7 +102,7 @@ export default function Sidebar() {
       console.error('Error logging out:', error);
     } finally {
       setIsLoggingOut(false);
-      setShowLogoutConfirm(false);
+      setShowLogoutDialog(false);
     }
   };
 
@@ -401,45 +405,23 @@ export default function Sidebar() {
 
         {/* Logout Button at bottom of sidebar */}
         <div className={`p-4 border-t border-gray-200 ${isSidebarCollapsed ? 'md:block hidden' : 'block'}`}>
-          {showLogoutConfirm ? (
-            <div className="space-y-2 p-2 bg-gray-50 rounded-md">
-              <p className="text-xs text-gray-700 text-center">Are you sure?</p>
-              <div className="flex space-x-2">
-                <Button
-                  onClick={handleLogout}
-                  className="flex-1 h-8 bg-red-500 hover:bg-red-600 text-xs"
-                  disabled={isLoggingOut}
-                >
-                  {isLoggingOut ? <Loader2 className="h-3 w-3 animate-spin" /> : "Yes"}
-                </Button>
-                <Button
-                  onClick={handleLogoutCancel}
-                  variant="outline"
-                  className="flex-1 h-8 text-xs"
-                >
-                  No
-                </Button>
-              </div>
+          {isSidebarCollapsed ? (
+            <div 
+              onClick={handleLogoutClick}
+              className="flex justify-center items-center cursor-pointer bg-red-50 border border-red-300 rounded-[10px] p-2 text-white hover:bg-red-100 transition-colors"
+              aria-label="Logout"
+            >
+              <LogOut className="h-5 w-5 text-red-600" />
             </div>
           ) : (
-            isSidebarCollapsed ? (
-              <div 
-                onClick={handleLogoutClick}
-                className="flex justify-center items-center cursor-pointer bg-red-50 border border-red-300 rounded-[10px] p-2 text-white hover:bg-red-100 transition-colors"
-                aria-label="Logout"
-              >
-                <LogOut className="h-5 w-5 text-red-600" />
-              </div>
-            ) : (
-              <Button
-                onClick={handleLogoutClick}
-                variant="destructive"
-                className="w-full justify-center border border-red-300 rounded-md"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                <span>Logout</span>
-              </Button>
-            )
+            <Button
+              onClick={handleLogoutClick}
+              variant="destructive"
+              className="w-full justify-center border border-red-300 rounded-md"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              <span>Logout</span>
+            </Button>
           )}
         </div>
       </div>
@@ -451,6 +433,35 @@ export default function Sidebar() {
         }`}
         onClick={() => setIsSidebarCollapsed(true)}
       />
+
+      {/* Logout Confirmation Dialog */}
+      <Dialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Confirm Logout</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to log out? You will need to sign in again to access your documents.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setShowLogoutDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="gap-2"
+            >
+              {isLoggingOut && <Loader2 className="h-4 w-4 animate-spin" />}
+              {isLoggingOut ? "Logging out..." : "Logout"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 } 

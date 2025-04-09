@@ -19,7 +19,8 @@ const Dashboard = () => {
   const [uploadTimeout, setUploadTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isPremium, setIsPremium] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const maxFileSize = isPremium ? 100 * 1024 * 1024 : 4 * 1024 * 1024; // 100MB or 4MB
+  const maxFileSize = isPremium ? 50 * 1024 * 1024 : 4 * 1024 * 1024; // 50MB for premium, 4MB for free
+  const maxFileSizeText = isPremium ? "50MB" : "4MB";
 
   // Clear timeout on unmount
   useEffect(() => {
@@ -104,7 +105,7 @@ const Dashboard = () => {
       // Check file size limit for free tier users
       if (!isPremium && file.size > 4 * 1024 * 1024) {
         throw new Error(
-          'File size exceeds the 4MB limit for free users. Upgrade to Premium for files up to 100MB.'
+          'File size exceeds the 4MB limit for free users. Upgrade to Premium for files up to 50MB.'
         );
       }
 
@@ -259,7 +260,7 @@ const Dashboard = () => {
                       </p>
                       <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-500">
                         <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
-                        <span>Maximum file size: {isPremium ? '100MB' : '4MB'}</span>
+                        <span>Maximum file size: {maxFileSizeText}</span>
                       </div>
                     </>
                   )}

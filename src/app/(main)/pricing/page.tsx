@@ -101,7 +101,7 @@ export default function PricingPage() {
                 <div className="flex-shrink-0">
                   <Check className="h-5 w-5 text-white" />
                 </div>
-                <p className="ml-3 text-base">Large document uploads (up to 100MB)</p>
+                <p className="ml-3 text-base">Large document uploads (up to 50MB)</p>
               </li>
               <li className="flex items-start">
                 <div className="flex-shrink-0">
@@ -172,7 +172,7 @@ export default function PricingPage() {
                 How does the premium plan compare to the free plan?
               </dt>
               <dd className="mt-2 text-base leading-7 text-gray-600">
-                The premium plan offers significantly more capabilities, including larger document uploads (up to 100MB), unlimited credits, advanced document analysis, priority support, and enhanced AI capabilities.
+                The premium plan offers significantly more capabilities, including larger document uploads (up to 50MB), unlimited credits, advanced document analysis, priority support, and enhanced AI capabilities.
               </dd>
             </div>
             <div className="pt-6">

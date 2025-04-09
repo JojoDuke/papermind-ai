@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const maxFileSize = userData.is_premium ? 100 * 1024 * 1024 : 4 * 1024 * 1024; // 100MB for premium, 4MB for free
+    const maxFileSize = userData.is_premium ? 50 * 1024 * 1024 : 4 * 1024 * 1024; // 50MB for premium, 4MB for free
 
     const formData = await request.formData();
     const file = formData.get('file') as File;
@@ -53,7 +53,11 @@ export async function POST(request: NextRequest) {
     // Check file size
     if (file.size > maxFileSize) {
       return NextResponse.json(
-        { error: `File size exceeds ${maxFileSize / (1024 * 1024)}MB limit` },
+        {
+          error: `File size exceeds the ${userData.is_premium ? '50MB' : '4MB'} limit${
+            !userData.is_premium ? '. Upgrade to Premium for files up to 50MB' : ''
+          }.`,
+        },
         { status: 400 }
       );
     }
