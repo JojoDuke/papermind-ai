@@ -191,8 +191,8 @@ const Dashboard = () => {
       </div>
       
       {/* Main Content */}
-      <div className="relative h-full w-full p-8 flex items-center justify-center z-0">
-        <div className="w-3/4 h-3/4 bg-white border border-gray-200 rounded-xl shadow-md flex flex-col items-center justify-center p-8">
+      <div className="relative h-full w-full p-4 md:p-8 flex items-center justify-center z-0">
+        <div className="w-[95%] sm:w-[90%] md:w-3/4 h-auto sm:h-3/4 bg-white border border-gray-200 rounded-xl shadow-md flex flex-col items-center justify-center p-4 sm:p-8">
           <Dropzone
             onDrop={handleUpload}
             accept={{ "application/pdf": [".pdf"] }}
@@ -201,18 +201,18 @@ const Dashboard = () => {
             {({getRootProps, getInputProps, isDragActive}) => (
               <div 
                 {...getRootProps()} 
-                className="w-2/3 mx-auto h-64 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer flex flex-col items-center justify-center"
+                className="w-full sm:w-2/3 mx-auto h-52 sm:h-64 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer flex flex-col items-center justify-center"
               >
                 <input {...getInputProps()} />
-                <div className="flex flex-col items-center justify-center">
-                  <div className="p-4 rounded-full bg-purple-100 mb-4">
+                <div className="flex flex-col items-center justify-center p-4">
+                  <div className="p-3 sm:p-4 rounded-full bg-purple-100 mb-3 sm:mb-4">
                     {isUploading ? (
-                      <Loader2 className="h-10 w-10 text-purple-500 animate-spin" />
+                      <Loader2 className="h-8 w-8 sm:h-10 sm:w-10 text-purple-500 animate-spin" />
                     ) : (
-                      <Upload className="h-10 w-10 text-purple-500" />
+                      <Upload className="h-8 w-8 sm:h-10 sm:w-10 text-purple-500" />
                     )}
                   </div>
-                  <h2 className="text-2xl font-semibold text-gray-800 mb-3">
+                  <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-3 text-center">
                     {isUploading ? "Uploading..." : "Upload Your Documents"}
                   </h2>
                   {isUploading ? (
@@ -222,11 +222,11 @@ const Dashboard = () => {
                     </div>
                   ) : (
                     <>
-                      <p className="text-gray-600 text-center max-w-md mb-4">
+                      <p className="text-sm sm:text-base text-gray-600 text-center max-w-md mb-3 sm:mb-4">
                         {isDragActive ? "Drop your PDF here" : "Click to browse or drag and drop your PDF"}
                       </p>
-                      <div className="flex items-center space-x-2 text-sm text-gray-500">
-                        <FileText className="h-4 w-4" />
+                      <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-500">
+                        <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
                         <span>Maximum file size: {isPremium ? '100MB' : '4MB'}</span>
                       </div>
                     </>

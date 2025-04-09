@@ -104,7 +104,23 @@ export default function Sidebar() {
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
+    // Dispatch a custom event to inform other components
+    const event = new CustomEvent('sidebar-toggled');
+    window.dispatchEvent(event);
   };
+
+  // Listen for toggle-sidebar events from other components (like document page)
+  useEffect(() => {
+    const handleToggleSidebar = () => {
+      toggleSidebar();
+    };
+    
+    window.addEventListener('toggle-sidebar', handleToggleSidebar);
+    
+    return () => {
+      window.removeEventListener('toggle-sidebar', handleToggleSidebar);
+    };
+  }, []);
 
   // Close sidebar when clicking outside
   useEffect(() => {
@@ -240,15 +256,33 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Sidebar - Absolute positioned */}
+      {/* Mobile Sidebar Toggle Button - Only visible when sidebar is collapsed and NOT on document page */}
+      {isSidebarCollapsed && !pathname.startsWith('/dashboard/d/') && (
+        <button
+          onClick={toggleSidebar}
+          className="md:hidden fixed top-4 left-4 z-30 bg-purple-500 text-white p-3 rounded-full shadow-lg"
+          aria-label="Open sidebar"
+        >
+          <PanelLeftOpen className="h-5 w-5" />
+        </button>
+      )}
+      
+      {/* Mobile Overlay - Only visible when sidebar is open on mobile */}
+      {!isSidebarCollapsed && (
+        <div 
+          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-10"
+          onClick={() => setIsSidebarCollapsed(true)}
+        />
+      )}
+
+      {/* Sidebar */}
       <div 
         id="sidebar"
-        className={`absolute top-0 left-0 h-full bg-white border-r border-gray-200 shadow-lg flex flex-col transition-all duration-300 z-10 ${
-          isSidebarCollapsed ? 'w-16' : 'w-72'
-        }`}
+        className={`absolute top-0 left-0 h-full bg-white border-r border-gray-200 shadow-lg flex flex-col transition-all duration-300 z-20
+          ${isSidebarCollapsed ? 'w-0 md:w-16 -translate-x-full md:translate-x-0' : 'w-[85%] sm:w-72 translate-x-0'}`}
       >
         {/* Credits Display */}
-        <div className={`p-4 border-b border-gray-200 ${isSidebarCollapsed ? "justify-center" : "justify-between"} flex items-center`}>
+        <div className={`p-4 border-b border-gray-200 ${isSidebarCollapsed ? "justify-center" : "justify-between"} flex items-center ${isSidebarCollapsed ? 'md:flex hidden' : 'flex'}`}>
           <div className={`flex items-center gap-2 ${isSidebarCollapsed ? "w-8 h-8 justify-center" : ""}`}>
             <Coins className="w-5 h-5 text-purple-500" />
             {!isSidebarCollapsed && (
@@ -259,9 +293,9 @@ export default function Sidebar() {
             )}
           </div>
           {!isSidebarCollapsed && !isPremium && (
-            <Button
-              variant="outline"
-              size="sm"
+            <Button 
+              variant="outline" 
+              size="sm" 
               className="text-xs"
               onClick={handleUpgrade}
             >
@@ -269,9 +303,9 @@ export default function Sidebar() {
             </Button>
           )}
         </div>
-        
+
         {/* Sidebar Header with Toggle Button */}
-        <div className={`p-4 border-b border-gray-200 flex ${isSidebarCollapsed ? 'justify-center' : 'justify-between items-center'}`}>
+        <div className={`p-4 border-b border-gray-200 flex ${isSidebarCollapsed ? 'md:flex hidden justify-center' : 'flex justify-between items-center'}`}>
           <Tooltip 
             content={isSidebarCollapsed ? "Open sidebar" : "Close sidebar"}
             side={isSidebarCollapsed ? "right" : "bottom"}
@@ -289,19 +323,19 @@ export default function Sidebar() {
           {!isSidebarCollapsed && (
             <Tooltip content="New Document" side="bottom">
               <Button
-                variant="ghost"
-                size="sm"
-                className="p-1 hover:bg-gray-100"
-                onClick={handleNewDocument}
+                  variant="ghost"
+                  size="sm"
+                  className="p-1 hover:bg-gray-100"
+                  onClick={handleNewDocument}
               >
-                <Plus className="h-5 w-5" />
+                  <Plus className="h-5 w-5" />
               </Button>
             </Tooltip>
           )}
         </div>
-        
+
         {/* Navigation Links */}
-        <div className="flex-1 overflow-y-auto py-4 px-3">
+        <div className={`flex-1 overflow-y-auto py-4 px-3 ${isSidebarCollapsed ? 'md:block hidden' : 'block'}`}>
           <div className={`mb-4 ${isSidebarCollapsed ? 'hidden' : 'block'}`}>
             <h3 className="px-2 text-sm font-semibold text-gray-500 uppercase tracking-wider">
               Your Documents
@@ -364,14 +398,31 @@ export default function Sidebar() {
             </ul>
           )}
         </div>
-        
+
         {/* Logout Button at bottom of sidebar */}
-        <div className="p-4 border-t border-gray-200">
-          <Tooltip 
-            content="Log out of this account"
-            side={isSidebarCollapsed ? "right" : "top"}
-          >
-            {isSidebarCollapsed ? (
+        <div className={`p-4 border-t border-gray-200 ${isSidebarCollapsed ? 'md:block hidden' : 'block'}`}>
+          {showLogoutConfirm ? (
+            <div className="space-y-2 p-2 bg-gray-50 rounded-md">
+              <p className="text-xs text-gray-700 text-center">Are you sure?</p>
+              <div className="flex space-x-2">
+                <Button
+                  onClick={handleLogout}
+                  className="flex-1 h-8 bg-red-500 hover:bg-red-600 text-xs"
+                  disabled={isLoggingOut}
+                >
+                  {isLoggingOut ? <Loader2 className="h-3 w-3 animate-spin" /> : "Yes"}
+                </Button>
+                <Button
+                  onClick={handleLogoutCancel}
+                  variant="outline"
+                  className="flex-1 h-8 text-xs"
+                >
+                  No
+                </Button>
+              </div>
+            </div>
+          ) : (
+            isSidebarCollapsed ? (
               <div 
                 onClick={handleLogoutClick}
                 className="flex justify-center items-center cursor-pointer bg-red-50 border border-red-300 rounded-[10px] p-2 text-white hover:bg-red-100 transition-colors"
@@ -380,64 +431,26 @@ export default function Sidebar() {
                 <LogOut className="h-5 w-5 text-red-600" />
               </div>
             ) : (
-              <Button 
-                onClick={handleLogoutClick} 
+              <Button
+                onClick={handleLogoutClick}
                 variant="destructive"
                 className="w-full justify-center border border-red-300 rounded-md"
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 <span>Logout</span>
               </Button>
-            )}
-          </Tooltip>
+            )
+          )}
         </div>
       </div>
 
-      {/* Content overlay when sidebar is expanded */}
+      {/* Content overlay when sidebar is expanded on desktop */}
       <div 
-        className={`absolute top-0 left-0 w-full h-full bg-black transition-opacity duration-300 z-5 ${
+        className={`fixed top-0 left-0 w-full h-full bg-black transition-opacity duration-300 z-5 md:block hidden ${
           !isSidebarCollapsed ? 'opacity-20' : 'opacity-0 pointer-events-none'
         }`}
         onClick={() => setIsSidebarCollapsed(true)}
       />
-
-      {/* Logout Confirmation Modal */}
-      {showLogoutConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full mx-4">
-            <div className="flex items-center mb-4">
-              <AlertCircle className="h-6 w-6 text-red-500 mr-2" />
-              <h3 className="text-lg font-semibold">Confirm Logout</h3>
-            </div>
-            <p className="text-gray-600 mb-6">
-              Are you sure you want to log out of your account?
-            </p>
-            <div className="flex justify-end space-x-2">
-              <Button 
-                variant="outline" 
-                onClick={handleLogoutCancel}
-                disabled={isLoggingOut}
-              >
-                Cancel
-              </Button>
-              <Button 
-                variant="destructive" 
-                onClick={handleLogout}
-                disabled={isLoggingOut}
-              >
-                {isLoggingOut ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Logging out...
-                  </>
-                ) : (
-                  'Log out'
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 } 
