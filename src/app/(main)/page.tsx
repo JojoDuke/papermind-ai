@@ -146,6 +146,125 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Pricing Section */}
+      <div id="pricing" className="mx-auto mb-32 mt-32 max-w-5xl sm:mt-56">
+        <div className="mb-12 px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl sm:text-center">
+            <h2 className="mt-2 font-bold text-4xl text-black sm:text-5xl">
+              Simple, transparent pricing
+            </h2>
+            <p className="mt-4 text-lg text-black/60">
+              Whether you're just starting or need advanced features, we have a plan that's right for you.
+            </p>
+          </div>
+        </div>
+
+        <div className="mx-auto grid max-w-md grid-cols-1 gap-8 lg:max-w-4xl lg:grid-cols-2 px-6">
+          {/* Free Plan */}
+          <div className="flex flex-col rounded-3xl bg-white shadow-xl ring-1 ring-gray-200 p-8">
+            <h3 className="text-xl font-semibold text-gray-900">Free</h3>
+            <p className="mt-4 text-gray-500">Get started with the basics</p>
+            <p className="mt-6 flex items-baseline">
+              <span className="text-4xl font-bold tracking-tight text-gray-900">$0</span>
+              <span className="ml-1 text-sm font-semibold text-gray-500">/month</span>
+            </p>
+            <ul className="mt-8 space-y-3">
+              <li className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <p className="ml-3 text-sm text-gray-700">Limited document uploads (4MB)</p>
+              </li>
+              <li className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <p className="ml-3 text-sm text-gray-700">Basic document chat</p>
+              </li>
+              <li className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <p className="ml-3 text-sm text-gray-700">Limited credits per month</p>
+              </li>
+            </ul>
+            <Link
+              href="/signin"
+              className="mt-8 block rounded-md bg-gray-100 px-3.5 py-2 text-center text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-200 focus-visible:outline-offset-2"
+            >
+              Get started
+            </Link>
+          </div>
+
+          {/* Premium Plan */}
+          <div className="relative flex flex-col rounded-3xl bg-[#5D3FD3] shadow-xl ring-1 ring-[#5D3FD3] p-8 text-white">
+            <div className="absolute -top-4 right-8 rounded-full bg-[#4B32A8] px-4 py-1 text-xs font-semibold">
+              RECOMMENDED
+            </div>
+            <h3 className="text-xl font-semibold">Premium</h3>
+            <p className="mt-4 text-white/70">Unlock full capabilities</p>
+            <p className="mt-6 flex items-baseline">
+              <span className="text-4xl font-bold tracking-tight">$8.99</span>
+              <span className="ml-1 text-sm font-semibold text-white/70">/month</span>
+            </p>
+            <ul className="mt-8 space-y-3">
+              <li className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <p className="ml-3 text-sm">Large document uploads (up to 50MB)</p>
+              </li>
+              <li className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <p className="ml-3 text-sm">Advanced document analysis</p>
+              </li>
+              <li className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <p className="ml-3 text-sm">Podcast creation from documents</p>
+              </li>
+              <li className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <p className="ml-3 text-sm">Unlimited credits</p>
+              </li>
+              <li className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <p className="ml-3 text-sm">Priority support</p>
+              </li>
+            </ul>
+            <Link
+              href="/signin"
+              className="mt-8 block rounded-md bg-white px-3.5 py-2 text-center text-sm font-semibold text-[#5D3FD3] shadow-sm hover:bg-gray-100 focus-visible:outline-offset-2"
+            >
+              Get Started Now
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   );
 } 

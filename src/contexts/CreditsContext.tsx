@@ -10,6 +10,7 @@ interface CreditsContextType {
   updateCredits: (newCredits: number) => Promise<void>;
 }
 
+// Credit Context
 const CreditsContext = createContext<CreditsContextType | undefined>(undefined);
 
 export function CreditsProvider({ children }: { children: ReactNode }) {

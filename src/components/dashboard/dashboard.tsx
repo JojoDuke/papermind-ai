@@ -8,6 +8,7 @@ import Dropzone from "react-dropzone";
 import { useToast } from "../ui/use-toast";
 import { Progress } from "../ui/progress";
 import { useFiles } from "@/contexts/FileContext";
+import { Button } from "../ui/button";
 
 const Dashboard = () => {
   const router = useRouter();
@@ -17,7 +18,9 @@ const Dashboard = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadTimeout, setUploadTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isPremium, setIsPremium] = useState(false);
-  const maxFileSize = isPremium ? 100 * 1024 * 1024 : 4 * 1024 * 1024; // 100MB or 4MB
+  const [userId, setUserId] = useState<string | null>(null);
+  const maxFileSize = isPremium ? 50 * 1024 * 1024 : 4 * 1024 * 1024; // 50MB for premium, 4MB for free
+  const maxFileSizeText = isPremium ? "50MB" : "4MB";
 
   // Clear timeout on unmount
   useEffect(() => {
@@ -33,6 +36,7 @@ const Dashboard = () => {
     const checkPremiumStatus = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        setUserId(user.id);
         const { data: userData } = await supabase
           .from('users')
           .select('is_premium')
@@ -55,11 +59,33 @@ const Dashboard = () => {
     }
     setIsUploading(false);
     setUploadProgress(0);
+    
+    // Check if this is a file size limit error
+    const isFileSizeError = error.message?.includes('File size exceeds the 4MB limit for free users');
+    
     toast({
       title: "Upload error",
-      description: error.message || "An unknown error occurred. Please try again.",
+      description: "File size exceeds the 4MB limit for free users",
       variant: "destructive",
+      action: isFileSizeError ? (
+        <Button
+          variant="outline"
+          size="sm"
+          className="bg-white mt-2 border-purple-500 text-purple-700 hover:bg-purple-50"
+          onClick={handleUpgrade}
+        >
+          Upgrade to Premium
+        </Button>
+      ) : undefined,
     });
+  };
+
+  const handleUpgrade = () => {
+    if (!userId) return;
+    
+    // Pass user ID in metadata with new product ID
+    const paymentUrl = `https://checkout.dodopayments.com/buy/pdt_d7YDUnxXaEs3K3DyEyUOO?quantity=1&redirect_url=${encodeURIComponent('http://usepapermind.com/dashboard')}&metadata_user_id=${encodeURIComponent(userId)}`;
+    window.location.href = paymentUrl;
   };
 
   const handleUpload = async (acceptedFiles: File[]) => {
@@ -75,6 +101,13 @@ const Dashboard = () => {
       setUploadTimeout(timeout);
 
       const file = acceptedFiles[0]; // We only handle one file at a time
+
+      // Check file size limit for free tier users
+      if (!isPremium && file.size > 4 * 1024 * 1024) {
+        throw new Error(
+          'File size exceeds the 4MB limit for free users. Upgrade to Premium for files up to 50MB.'
+        );
+      }
 
       // Get the current user's ID
       const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -191,8 +224,8 @@ const Dashboard = () => {
       </div>
       
       {/* Main Content */}
-      <div className="relative h-full w-full p-8 flex items-center justify-center z-0">
-        <div className="w-3/4 h-3/4 bg-white border border-gray-200 rounded-xl shadow-md flex flex-col items-center justify-center p-8">
+      <div className="relative h-full w-full p-4 md:p-8 flex items-center justify-center z-0">
+        <div className="w-[95%] sm:w-[90%] md:w-3/4 h-auto sm:h-3/4 bg-white border border-gray-200 rounded-xl shadow-md flex flex-col items-center justify-center p-4 sm:p-8">
           <Dropzone
             onDrop={handleUpload}
             accept={{ "application/pdf": [".pdf"] }}
@@ -201,18 +234,18 @@ const Dashboard = () => {
             {({getRootProps, getInputProps, isDragActive}) => (
               <div 
                 {...getRootProps()} 
-                className="w-2/3 mx-auto h-64 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer flex flex-col items-center justify-center"
+                className="w-full sm:w-2/3 mx-auto h-52 sm:h-64 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer flex flex-col items-center justify-center"
               >
                 <input {...getInputProps()} />
-                <div className="flex flex-col items-center justify-center">
-                  <div className="p-4 rounded-full bg-purple-100 mb-4">
+                <div className="flex flex-col items-center justify-center p-4">
+                  <div className="p-3 sm:p-4 rounded-full bg-purple-100 mb-3 sm:mb-4">
                     {isUploading ? (
-                      <Loader2 className="h-10 w-10 text-purple-500 animate-spin" />
+                      <Loader2 className="h-8 w-8 sm:h-10 sm:w-10 text-purple-500 animate-spin" />
                     ) : (
-                      <Upload className="h-10 w-10 text-purple-500" />
+                      <Upload className="h-8 w-8 sm:h-10 sm:w-10 text-purple-500" />
                     )}
                   </div>
-                  <h2 className="text-2xl font-semibold text-gray-800 mb-3">
+                  <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-3 text-center">
                     {isUploading ? "Uploading..." : "Upload Your Documents"}
                   </h2>
                   {isUploading ? (
@@ -222,12 +255,12 @@ const Dashboard = () => {
                     </div>
                   ) : (
                     <>
-                      <p className="text-gray-600 text-center max-w-md mb-4">
+                      <p className="text-sm sm:text-base text-gray-600 text-center max-w-md mb-3 sm:mb-4">
                         {isDragActive ? "Drop your PDF here" : "Click to browse or drag and drop your PDF"}
                       </p>
-                      <div className="flex items-center space-x-2 text-sm text-gray-500">
-                        <FileText className="h-4 w-4" />
-                        <span>Maximum file size: {isPremium ? '100MB' : '4MB'}</span>
+                      <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-500">
+                        <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
+                        <span>Maximum file size: {maxFileSizeText}</span>
                       </div>
                     </>
                   )}
