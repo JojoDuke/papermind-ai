@@ -8,6 +8,7 @@ import Dropzone from "react-dropzone";
 import { useToast } from "../ui/use-toast";
 import { Progress } from "../ui/progress";
 import { useFiles } from "@/contexts/FileContext";
+import { Button } from "../ui/button";
 
 const Dashboard = () => {
   const router = useRouter();
@@ -17,6 +18,7 @@ const Dashboard = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadTimeout, setUploadTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isPremium, setIsPremium] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const maxFileSize = isPremium ? 100 * 1024 * 1024 : 4 * 1024 * 1024; // 100MB or 4MB
 
   // Clear timeout on unmount
@@ -33,6 +35,7 @@ const Dashboard = () => {
     const checkPremiumStatus = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        setUserId(user.id);
         const { data: userData } = await supabase
           .from('users')
           .select('is_premium')
@@ -55,11 +58,33 @@ const Dashboard = () => {
     }
     setIsUploading(false);
     setUploadProgress(0);
+    
+    // Check if this is a file size limit error
+    const isFileSizeError = error.message?.includes('File size exceeds the 4MB limit for free users');
+    
     toast({
       title: "Upload error",
-      description: error.message || "An unknown error occurred. Please try again.",
+      description: "File size exceeds the 4MB limit for free users",
       variant: "destructive",
+      action: isFileSizeError ? (
+        <Button
+          variant="outline"
+          size="sm"
+          className="bg-white mt-2 border-purple-500 text-purple-700 hover:bg-purple-50"
+          onClick={handleUpgrade}
+        >
+          Upgrade to Premium
+        </Button>
+      ) : undefined,
     });
+  };
+
+  const handleUpgrade = () => {
+    if (!userId) return;
+    
+    // Pass user ID in metadata
+    const paymentUrl = `https://test.checkout.dodopayments.com/buy/pdt_idWXm8RKDDzZ5nnMMDyLo?quantity=1&redirect_url=${encodeURIComponent('http://usepapermind.com/dashboard')}&metadata_user_id=${encodeURIComponent(userId)}`;
+    window.location.href = paymentUrl;
   };
 
   const handleUpload = async (acceptedFiles: File[]) => {
@@ -75,6 +100,13 @@ const Dashboard = () => {
       setUploadTimeout(timeout);
 
       const file = acceptedFiles[0]; // We only handle one file at a time
+
+      // Check file size limit for free tier users
+      if (!isPremium && file.size > 4 * 1024 * 1024) {
+        throw new Error(
+          'File size exceeds the 4MB limit for free users. Upgrade to Premium for files up to 100MB.'
+        );
+      }
 
       // Get the current user's ID
       const { data: { user }, error: userError } = await supabase.auth.getUser();
