@@ -55,7 +55,7 @@ export default function SignUpPage() {
       
       if (signUpError) throw signUpError;
       
-      // 2. Create a record in the users table
+      // 2. Create a record in the users table after signup
       if (authData.user) {
         const { error: insertError } = await supabase
           .from('users')
@@ -68,6 +68,7 @@ export default function SignUpPage() {
               created_at: new Date().toISOString()
             }
           ]);
+          
         
         if (insertError) {
           console.error("Error inserting user data:", insertError);

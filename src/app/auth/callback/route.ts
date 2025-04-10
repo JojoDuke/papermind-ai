@@ -14,6 +14,6 @@ export async function GET(req: NextRequest) {
     await supabase.auth.exchangeCodeForSession(code)
   }
 
-  // Always redirect to dashboard after auth
-  return NextResponse.redirect(new URL('/dashboard', req.url))
+  // Redirect to profile page 
+  return NextResponse.redirect(new URL('/profile', req.url))
 } 
