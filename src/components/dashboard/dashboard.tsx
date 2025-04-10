@@ -84,7 +84,8 @@ const Dashboard = () => {
     if (!userId) return;
     
     // Pass user ID in metadata with test product ID
-    const paymentUrl = `https://test.checkout.dodopayments.com/buy/pdt_idWXm8RKDDzZ5nnMMDyLo?quantity=1&redirect_url=${encodeURIComponent('http://usepapermind.com/dashboard')}&metadata_user_id=${encodeURIComponent(userId)}`;
+    const currentOrigin = window.location.origin;
+    const paymentUrl = `https://test.checkout.dodopayments.com/buy/pdt_idWXm8RKDDzZ5nnMMDyLo?quantity=1&redirect_url=${encodeURIComponent(`${currentOrigin}/dashboard?success=true`)}&metadata_user_id=${encodeURIComponent(userId)}`;
     window.location.href = paymentUrl;
   };
 
