@@ -18,6 +18,50 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "Papermind AI - Your Intelligent Document Assistant",
   description: "Transform your PDFs into interactive knowledge with AI-powered conversations and insights",
+  icons: {
+    icon: [
+      {
+        url: "/icons/favicon.ico",
+        sizes: "48x48",
+      },
+      {
+        url: "/icons/papermind-logo-icon.png",
+        type: "image/png",
+        sizes: "48x48",
+      },
+      {
+        url: "/icons/papermind-logo-icon.png",
+        type: "image/png",
+        sizes: "96x96",
+      },
+      {
+        url: "/icons/papermind-logo-icon.png",
+        type: "image/png",
+        sizes: "144x144",
+      }
+    ],
+    apple: [
+      {
+        url: "/icons/papermind-logo-icon.png",
+        type: "image/png",
+      }
+    ],
+    shortcut: [
+      {
+        url: "/icons/papermind-logo-icon.png",
+        type: "image/png",
+        sizes: "196x196",
+      }
+    ],
+  },
+  manifest: "/manifest.json",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
+  themeColor: "#5D3FD3",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Papermind AI",
+  },
 };
 
 export default function RootLayout({
