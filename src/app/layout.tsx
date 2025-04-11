@@ -17,7 +17,23 @@ const jakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: "Papermind AI - Your Intelligent Document Assistant",
-  description: "Transform your PDFs into interactive knowledge with AI-powered conversations and insights",
+  description: "Transform your documents into interactive knowledge with AI-powered conversations and insights",
+  openGraph: {
+    title: "Papermind AI - Your Intelligent Document Assistant",
+    description: "Transform your documents into interactive knowledge with AI-powered conversations and insights",
+    images: [{
+      url: "https://i.ibb.co/PstPy700/Screenshot-2025-04-10-232519.png",
+      width: 1200,
+      height: 630,
+      alt: "Papermind AI Preview"
+    }]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Papermind AI - Your Intelligent Document Assistant",
+    description: "Transform your documents into interactive knowledge with AI-powered conversations and insights",
+    images: ["https://i.ibb.co/PstPy700/Screenshot-2025-04-10-232519.png"],
+  },
   icons: {
     icon: [
       {
