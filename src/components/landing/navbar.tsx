@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { AuthButtons } from "./auth-buttons";
+import Image from "next/image";
+import logo from "../../../public/icons/papermind-logo-icon.png";
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -15,10 +17,9 @@ const Navbar = () => {
     <nav className="fixed h-14 inset-x-0 top-0 z-30 w-full bg-[#5D3FD3]/80 shadow-md backdrop-blur-lg transition-all">
       <MaxWidthWrapper>
         <div className="flex h-14 items-center justify-between">
-          <Link href="/" className="flex z-40 font-semibold">
-            <h3 className="text-white">
-              <span className="text-white">Paper</span>mind AI
-            </h3>
+          <Link href="/" className="flex z-40 font-semibold items-center">
+            <Image src={logo} alt="Papermind AI" width={45} height={45} className="mr-0" />
+            <span className="text-white">Papermind AI</span>
           </Link>
 
           {/* Mobile menu button */}

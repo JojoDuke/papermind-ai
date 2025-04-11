@@ -10,7 +10,6 @@ import hmac
 import hashlib
 from supabase import create_client, Client
 import datetime
-from dodopayments import DodoPayments
 
 # Load environment variables from .env file
 load_dotenv()
@@ -18,11 +17,6 @@ load_dotenv()
 # Initialize Supabase client with service role key
 supabase_url = os.getenv("SUPABASE_URL")
 service_key = os.getenv("SUPABASE_SERVICE_KEY")
-
-# Initialize Dodo Payments client
-dodo_client = DodoPayments(
-    bearer_token=os.getenv("DODO_PAYMENTS_API_KEY")
-)
 
 if not supabase_url or not service_key:
     raise ValueError("Missing Supabase configuration. Please check your .env file.")
@@ -186,8 +180,8 @@ async def dodo_webhook(request: Request):
         payload = json.loads(raw_body)
         print("Raw body:", payload)
 
-        if payload.get("type") == "payment.succeeded":
-            print("Payment succeeded detected!")
+        if payload.get("type") == "subscription.active":
+            print("Payment succeeded, you are now a premium user!")
             
             # Get user ID from metadata
             metadata = payload.get("data", {}).get("metadata", {})
@@ -205,7 +199,45 @@ async def dodo_webhook(request: Request):
             }).eq("id", user_id).execute()
             
             print("Supabase update response:", response)
-
+            
+        elif payload.get("type") == "subscription.cancelled":
+            print("Subscription cancelled, your subscription will end on the next billing date.")
+            
+        elif payload.get("type") == "subscription.renewed":
+            print("Subscription renewed, you are now a premium user!")
+            
+            # Get user ID from metadata
+            metadata = payload.get("data", {}).get("metadata", {})
+            user_id = metadata.get("user_id")
+            
+            if user_id:
+                # Reset credits on renewal
+                response = supabase.table("users").update({
+                    "credits_remaining": 100,  # Reset credits to 100
+                    "is_premium": True
+                }).eq("id", user_id).execute()
+                
+                print("Subscription renewed, credits reset:", response)
+        
+        elif payload.get("type") == "subscription.paused":
+            print("Subscription paused, your subscription will end on the next billing date.")
+            
+        elif payload.get("type") == "subscription.expired":
+            print("Subscription expired, premium access removed.")
+            
+            # Get user ID from metadata
+            metadata = payload.get("data", {}).get("metadata", {})
+            user_id = metadata.get("user_id")
+            
+            if user_id:
+                # Remove premium status
+                response = supabase.table("users").update({
+                    "credits_remaining": 10, 
+                    "is_premium": False
+                }).eq("id", user_id).execute()
+                
+                print("Premium status removed:", response)
+        
         return {"status": "ok"}
 
     except Exception as e:
