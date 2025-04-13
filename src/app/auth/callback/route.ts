@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   const redirectUrl = searchParams.get('redirectUrl')
 
   // Extract the host from the current request
-  const { origin } = new URL(req.url)
+  const origin = "usepapermind.com"
   
   if (code) {
     // Exchange the auth code for a session
