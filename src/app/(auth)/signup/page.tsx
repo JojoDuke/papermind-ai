@@ -199,7 +199,7 @@ export default function SignUpPage() {
               await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                  redirectTo: `${window.location.origin}/auth/callback`
+                  redirectTo: 'https://usepapermind.com/auth/callback'
                 }
               });
             } catch (err) {
