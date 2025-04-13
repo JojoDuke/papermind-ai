@@ -12,6 +12,9 @@ export async function GET(req: NextRequest) {
   const success = searchParams.get('success')
   const redirectUrl = searchParams.get('redirectUrl')
 
+  // Extract the host from the current request
+  const { origin } = new URL(req.url)
+  
   if (code) {
     // Exchange the auth code for a session
     await supabase.auth.exchangeCodeForSession(code)
@@ -29,10 +32,17 @@ export async function GET(req: NextRequest) {
     if (hasPaymentSuccess && !success) {
       return NextResponse.redirect(new URL('/dashboard?success=true', req.url));
     }
-    return NextResponse.redirect(new URL(redirectUrl || '/dashboard?success=true', req.url));
+    
+    // Handle redirectUrl - if it's a relative path, prepend the origin
+    if (redirectUrl && !redirectUrl.startsWith('http')) {
+      return NextResponse.redirect(`${origin}${redirectUrl.startsWith('/') ? '' : '/'}${redirectUrl}`);
+    }
+    
+    // Otherwise use the dashboard with success parameter
+    return NextResponse.redirect(`${origin}/dashboard?success=true`);
   }
 
   // For normal auth flow, redirect to profile page to handle user creation
   console.log('Normal auth flow, redirecting to profile');
-  return NextResponse.redirect(new URL('/profile', req.url));
+  return NextResponse.redirect(`${origin}/profile`);
 } 
