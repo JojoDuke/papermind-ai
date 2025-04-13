@@ -39,9 +39,9 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
   const handleUpgrade = async () => {
     if (!userId) return;
     
-    // Direct redirect to Dodo Payments with test product ID
+    // Direct redirect to Dodo Payments with production product ID
     const currentOrigin = window.location.origin;
-    const paymentUrl = `https://test.checkout.dodopayments.com/buy/pdt_idWXm8RKDDzZ5nnMMDyLo?quantity=1&redirect_url=${encodeURIComponent(`${currentOrigin}/dashboard?success=true`)}&metadata_user_id=${encodeURIComponent(userId)}`;
+    const paymentUrl = `https://checkout.dodopayments.com/buy/pdt_d7YDUnxXaEs3K3DyEyUOO?quantity=1&redirect_url=${encodeURIComponent(`${currentOrigin}/dashboard?success=true`)}&metadata_user_id=${encodeURIComponent(userId)}`;
     window.location.href = paymentUrl;
   };
 
