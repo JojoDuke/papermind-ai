@@ -12,8 +12,8 @@ export async function GET(req: NextRequest) {
   const success = searchParams.get('success')
   const redirectUrl = searchParams.get('redirectUrl')
 
-  // Extract the host from the current request
-  const origin = "usepapermind.com"
+  // Use a fixed production URL with protocol
+  const origin = 'https://usepapermind.com'
   
   if (code) {
     // Exchange the auth code for a session
@@ -30,7 +30,8 @@ export async function GET(req: NextRequest) {
     console.log('Success parameter or redirectUrl detected, redirecting to dashboard');
     // If the URL has payment success indicators, make sure we add the success parameter
     if (hasPaymentSuccess && !success) {
-      return NextResponse.redirect(new URL('/dashboard?success=true', req.url));
+      return NextResponse.redirect(`${origin}/dashboard?success=true`);
+      //return NextResponse.redirect(new URL('/dashboard?success=true', req.url));
     }
     
     // Handle redirectUrl - if it's a relative path, prepend the origin
