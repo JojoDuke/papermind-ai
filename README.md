@@ -9,7 +9,6 @@ Papermind AI is your intelligent document companion - an AI-powered PDF and docu
 - **📝 Auto-Summarization**: Generate concise summaries and key takeaways
 - **🎯 Smart Highlights**: AI-powered identification of crucial points and insights
 - **🔎 Semantic Search**: Find exactly what you're looking for with natural language queries
-- **🌙 Dark Mode**: Easy on the eyes with full dark mode support
 - **📱 Responsive Design**: Seamless experience across desktop and mobile devices
 
 ## 🛠️ Tech Stack
